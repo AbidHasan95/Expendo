@@ -1,0 +1,36 @@
+{
+    "back": "undefined", 
+    "navigation": {
+        "addListener": ["Function addListener"], 
+        "canGoBack": ["Function canGoBack"], 
+        "dispatch": ["Function dispatch"], 
+        "getId": ["Function getId"], 
+        "getParent": ["Function getParent"], 
+        "getState": ["Function anonymous"], 
+        "goBack": ["Function anonymous"], 
+        "isFocused": ["Function isFocused"], 
+        "navigate": ["Function anonymous"], 
+        "pop": ["Function anonymous"], 
+        "popToTop": ["Function anonymous"], 
+        "push": ["Function anonymous"], 
+        "removeListener": ["Function removeListener"], 
+        "replace": ["Function anonymous"], 
+        "reset": ["Function anonymous"], 
+        "setOptions": ["Function setOptions"], 
+        "setParams": ["Function anonymous"]
+    }, 
+    "options": {
+        "callback": {
+            "changeModalVisibility": ["Function changeModalVisibility"]
+        }, 
+        "header": ["Function header"], 
+        "headerTitle": "Test1Home", 
+        "modalVisiblee": {
+            "modalVisible": false
+        }
+    }, 
+    "route": {
+        "key": "Home-zp8PwaKSpCpXqz4woGOMX", 
+        "name": "Home", 
+        "params": "undefined"}
+    }

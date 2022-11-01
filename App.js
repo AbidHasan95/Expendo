@@ -10,27 +10,9 @@
 //   );
 // }
 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#fff',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//   },
-// });
-
-
-
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, AppRegistry} from 'react-native';
-// import { createStackNavigator } from 'react-navigation-stack';
-import { createAppContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from'@react-navigation/native-stack';
 import HomeScreen from './src/screens/HomeScreen';
 import { NavigationContainer } from '@react-navigation/native';
-// import React from 'react';
-import {useState} from 'react';
-
 import ItemAddView from './src/components/itemAddModal';
 import HomeAppbar from './src/components/HomeAppbar';
 
@@ -54,12 +36,6 @@ import HomeAppbar from './src/components/HomeAppbar';
 
 const Stack = createNativeStackNavigator();
 const MyStack = () => {
-  // const [modalVisible,setModalVisible] = useState(false);
-  // console.log("in MyStack",modalVisible);
-  // const changeModalVisibility = (data) => {
-  //   console.log("in App.js => changeVisibility",data);
-  //   setModalVisible(data);
-  // }
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -81,8 +57,6 @@ const MyStack = () => {
           }}
           options={{ 
             headerTitle: "Test1Home", 
-            // callback: {changeModalVisibility},
-            // modalVisiblee: {modalVisible}
           }}
         />
 

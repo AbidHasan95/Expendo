@@ -15,6 +15,11 @@ import HomeScreen from './src/screens/HomeScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import ItemAddView from './src/components/itemAddModal';
 import HomeAppbar from './src/components/HomeAppbar';
+import {
+  GestureHandlerRootView,
+  RectButton,
+} from 'react-native-gesture-handler';
+import { StyleSheet} from 'react-native';
 
 // old method start
 // const navigator = createNativeStackNavigator(
@@ -37,42 +42,49 @@ import HomeAppbar from './src/components/HomeAppbar';
 const Stack = createNativeStackNavigator();
 const MyStack = () => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName='Home'
-        headerMode='screen'
-        screenOptions={{
-          // header: ({scene, navigation}) => (
-          //   <HomeAppbar scene={scene} navigation={navigation}/>
-          header: (props) => (
-            <HomeAppbar {...props}/>
-          )
-        }}
-      >
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          initialParams={{
-            modalVisible: false
+    <GestureHandlerRootView style={styles.root}>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName='Home'
+          headerMode='screen'
+          screenOptions={{
+            // header: ({scene, navigation}) => (
+            //   <HomeAppbar scene={scene} navigation={navigation}/>
+            header: (props) => (
+              <HomeAppbar {...props}/>
+            )
           }}
-          options={{ 
-            headerTitle: "Test1Home", 
-          }}
-        />
+        >
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            initialParams={{
+              modalVisible: false
+            }}
+            options={{ 
+              headerTitle: "Test1Home", 
+            }}
+          />
 
-        <Stack.Screen
-          name="MyModal"
-          // modalVisible = {false}
-          component={ItemAddView}
-          options={{
-            presentation: 'modal',
-          }}
-        />
-        {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
-      </Stack.Navigator>
-    </NavigationContainer>
+          <Stack.Screen
+            name="MyModal"
+            // modalVisible = {false}
+            component={ItemAddView}
+            options={{
+              presentation: 'modal',
+            }}
+          />
+          {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  }
+});
 
 export default MyStack;
 

@@ -2,6 +2,7 @@
 // import { Button, View } from "react-native";
 import { Appbar } from 'react-native-paper';
 
+// icon source - https://materialdesignicons.com/ ; https://icons.expo.fyi/
 
 const HomeAppbar = (props) => {
 
@@ -18,6 +19,7 @@ const HomeAppbar = (props) => {
         // console.log("plus button pressed", x, typeof(x))
         props.navigation.setParams({"modalVisible": true})
       }} />
+      <Appbar.Action icon="dots-vertical"/>
     </Appbar.Header> );
   }
 

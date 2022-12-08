@@ -101,6 +101,7 @@ const HomeScreen = (props) => {
         else {
             console.log("Date not changed", isDatePickerVisible, props.route.params.isDatePickerVisible)
         }
+        // console.log("transaction item----->>", transactionItems);
 
     },[props.route.params]);
 
@@ -135,7 +136,9 @@ const HomeScreen = (props) => {
                     <Text style={styles.topBarSummaryAmount}>₹ 1,300</Text>
                 </View>
             </View>
-            <ItemAddView isModalVisible={isModalVisible} dateAsKey={pickedDate.dateAsKey} itemAddCallback={dispatch} {...props}/>
+            <View style={styles.centeredView}>
+                <ItemAddView isModalVisible={isModalVisible} dateAsKey={pickedDate.dateAsKey} itemAddCallback={dispatch} {...props}/>
+            </View>
             <DateTimePickerModal
                 isVisible={isDatePickerVisible}
                 mode="date"
@@ -144,7 +147,7 @@ const HomeScreen = (props) => {
             />
             <FlatList 
                 data={transactionItems}
-                renderItem={({item}) => <TransactionItemCard {...item}/>}
+                renderItem={({item}) => <TransactionItemCard dateAsKey={pickedDate.dateAsKey} dispatchCallback={dispatch} {...item}/>}
             />
 
         </View>
@@ -164,6 +167,12 @@ const styles = StyleSheet.create({
     container : {
         flex: 1,
         paddingTop: 5,
+    },
+    centeredView: {
+        // flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        // marginTop: 22
     },
     topSummaryBar: {
         height: 50,

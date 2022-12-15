@@ -9,72 +9,120 @@
 //     </View>
 //   );
 // }
-
-import { createNativeStackNavigator } from'@react-navigation/native-stack';
-import HomeScreen from './src/screens/HomeScreen';
-import { NavigationContainer } from '@react-navigation/native';
-import ItemAddView from './src/components/itemAddModal';
-import HomeAppbar from './src/components/HomeAppbar';
+// import 'react-native-gesture-handler';
 import {
   GestureHandlerRootView,
   RectButton,
 } from 'react-native-gesture-handler';
+
+import { createNativeStackNavigator } from'@react-navigation/native-stack';
+import HomeScreen from './src/screens/HomeScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import HomeAppbar from './src/components/HomeAppbar';
 import { StyleSheet} from 'react-native';
 
-// old method start
-// const navigator = createNativeStackNavigator(
-//   {
-//     Home: HomeScreen
-//   },
-//   {
-//     initialRouteName: 'Home',
-//     defaultNavigationOptions: {
-//       title: 'App',
-//     },
-//   }
-// );
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { View, Button } from 'react-native';
+import ExpenditureCategoryScreen from './src/screens/CategoryScreen';
 
-// export default createAppContainer(navigator);
-// old method end
-
-
-
+import { LogBox } from 'react-native';
+LogBox.ignoreLogs(['flexWrap']); // Ignore log notification by message
+// console.disableYellowBox = true;
 const Stack = createNativeStackNavigator();
-const MyStack = () => {
+// const MyStack = () => {
+//   export default function MyStack() {
+//   return (
+//     <GestureHandlerRootView style={styles.root}>
+//       <NavigationContainer>
+//         <Stack.Navigator
+//           initialRouteName='Home'
+//           headerMode='screen'
+//           screenOptions={{
+//             // header: ({scene, navigation}) => (
+//             //   <HomeAppbar scene={scene} navigation={navigation}/>
+//             header: (props) => (
+//               <HomeAppbar {...props}/>
+//             )
+//           }}
+//         >
+//           <Stack.Screen
+//             name="Home"
+//             component={HomeScreen}
+//             initialParams={{
+//               modalVisible: false
+//             }}
+//             options={{ 
+//               headerTitle: "Test1Home", 
+//             }}
+//           />
+//           {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
+//         </Stack.Navigator>
+//       </NavigationContainer>
+//     </GestureHandlerRootView>
+//   );
+// }
+
+function NotificationsScreen({ navigation }) {
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Button onPress={() => navigation.goBack()} title="Go back home" />
+    </View>
+  );
+}
+
+function Home() {
+  return (
+    <Drawer.Navigator
+      headerMode='screen'
+    >
+      <Drawer.Screen 
+        name="Home" 
+        component={HomeScreen} initialParams={{
+        modalVisible: false,
+        }}
+        options={{
+          header: (props) => (
+            <HomeAppbar {...props}/>
+          ),
+          drawerStyle: {
+            // backgroundColor: '#c6cbef',
+            width: 200,
+          },
+          drawerPosition :'right',
+          drawerType: 'front',
+          swipeEnabled: false
+        }}
+      />
+      <Drawer.Screen
+        name="Add categories"
+        component={ExpenditureCategoryScreen}
+        options={{
+          drawerStyle: {
+            // backgroundColor: '#c6cbef',
+            width: 200,
+          },
+          drawerPosition :'right',
+          drawerType: 'front',
+          swipeEnabled: false
+        }}
+      /> 
+    </Drawer.Navigator>
+  )
+}
+
+const Drawer = createDrawerNavigator();
+export default function App() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName='Home'
-          headerMode='screen'
-          screenOptions={{
-            // header: ({scene, navigation}) => (
-            //   <HomeAppbar scene={scene} navigation={navigation}/>
-            header: (props) => (
-              <HomeAppbar {...props}/>
-            )
-          }}
+          initialRouteName='Root'
         >
           <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            initialParams={{
-              modalVisible: false
-            }}
-            options={{ 
-              headerTitle: "Test1Home", 
-            }}
+            name="Root"
+            component={Home}
+            options={{ headerShown: false }}
           />
-
-          <Stack.Screen
-            name="MyModal"
-            // modalVisible = {false}
-            component={ItemAddView}
-            options={{
-              presentation: 'modal',
-            }}
-          />
-          {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>
@@ -86,5 +134,5 @@ const styles = StyleSheet.create({
   }
 });
 
-export default MyStack;
+// export default MyStack;
 

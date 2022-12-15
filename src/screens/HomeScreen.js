@@ -147,6 +147,7 @@ const HomeScreen = (props) => {
             />
             <FlatList 
                 data={transactionItems}
+                ItemSeparatorComponent={() => <View style={styles.separator} />}
                 renderItem={({item}) => <TransactionItemCard dateAsKey={pickedDate.dateAsKey} dispatchCallback={dispatch} {...item}/>}
             />
 
@@ -167,6 +168,10 @@ const styles = StyleSheet.create({
     container : {
         flex: 1,
         paddingTop: 5,
+    },
+    separator: {
+        backgroundColor: 'rgb(200, 199, 204)',
+        height: StyleSheet.hairlineWidth,
     },
     centeredView: {
         // flex: 1,

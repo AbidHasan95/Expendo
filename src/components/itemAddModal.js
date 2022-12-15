@@ -4,7 +4,8 @@ import { useForm, Controller } from "react-hook-form"; //  https://react-hook-fo
 import {useState} from 'react';
 import SelectDropdown from 'react-native-select-dropdown'; //  https://www.npmjs.com/package/react-native-select-dropdown 
 import { SelectList, MultipleSelectList } from 'react-native-dropdown-select-list'; // https://github.com/danish1658/react-native-dropdown-select-list ; https://www.npmjs.com/package/react-native-dropdown-select-list 
-import EmojiPicker from 'emoji-picker-react';  // https://www.npmjs.com/package/emoji-picker-react ; https://yarnpkg.com/package/emoji-picker-react
+// import EmojiPicker from 'emoji-picker-react';  // https://www.npmjs.com/package/emoji-picker-react ; https://yarnpkg.com/package/emoji-picker-react
+// Menu from react native paper - https://stackoverflow.com/questions/61604500/how-do-i-pass-a-selected-item-from-react-native-paper-menu-to-input-textinput-on
 
 const ItemAddView = ({navigation, isModalVisible, dateAsKey, itemAddCallback}) => {
   // console.log("itemAddView",Date.now());
@@ -25,10 +26,22 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey, itemAddCallback}) =
   var mycategory;
   const onSubmit = data => {
     console.log("data---->-",data)
+    let key = Date.now()
     // var m = {type: 'add', key: Date.now(), dateAsKey: dateAsKey, date: "12-10-2022",...data}
     // console.log("onSubmit----->",data, "dateAsKeyyy->",dateAsKey,"the dict--->",m)
     // itemAddCallback({type: 'add', key: Date.now(), title: "test1", label: "food", transactionType: "credit", amount: 450, date: "12-10-2022"});
-    itemAddCallback({type: 'add', key: Date.now(), dateAsKey: dateAsKey,...data});
+    var newItem = {
+      key: key, // 1670065672356
+      title: data.title, // Veg Pulao
+      label: data.label, //Food, Misc
+      transactionType: data.transactionType, // Credit/Debit
+      amount: data.amount,
+      date: dateAsKey, // 221203 - 03 Dec 22
+      addTime: key,
+      isCredit: data.isCredit  // true - false
+    }
+    // itemAddCallback({type: 'add', key: Date.now(), dateAsKey: dateAsKey,...data});
+    itemAddCallback({type: 'newAdd', dateAsKey: dateAsKey, newItem: newItem});
     reset()
     navigation.setParams({"modalVisible": false})
   }
@@ -74,9 +87,9 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey, itemAddCallback}) =
             <Controller
               control={control}
               rules={{
-              maxLength: 10,
-              required: true,
-              pattern: /[0-9]{1,}/
+                maxLength: 10,
+                required: true,
+                pattern: /[0-9]{1,}/
               }}
               render={({ field: { onChange, onBlur, value } }) => (
                 <View style={{flexDirection: "row"}}>
@@ -174,11 +187,7 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey, itemAddCallback}) =
                 ]} 
                 save="value"
             /> */}
-
             
-              <EmojiPicker/>
-            
-
             <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => {

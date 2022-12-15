@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const setData = async (updatedItems, dateAsKey) => {
     try {
-        // console.log("Key to add--->:",dateAsKey,"updatedItems:",updatedItems)
+        console.log("Key to add--->:",dateAsKey,"updatedItems:",updatedItems)
         await AsyncStorage.setItem(dateAsKey, JSON.stringify(updatedItems))
     }
     catch (error) {
@@ -21,7 +21,7 @@ const getData = async (dateAsKey, dispatch) => {
                     // return value
                 }
                 else {
-                    console.info("No items fetched")
+                    console.info("No items fetched for",dateAsKey)
                     dispatch({type: 'get', fetchedData: []})
                     // return -1
                 }
@@ -84,6 +84,20 @@ const removeData = async (dateAsKey, itemkey) => {
     }
 }
 
+function categoriesReducer(items, action) {
+    switch (action.type) {
+        case 'select': {
+            for (let i=0; i<items.length; i++) {
+                let item = items[i]
+                if (item.id == action.key) {
+                    items[i].isSelected = true
+                    return items
+                } 
+            }
+        }
+    }
+}
+
 function itemsReducer(items,action) {
     // console.log("test itemsReducer",items,action)
     switch (action.type) {
@@ -104,7 +118,16 @@ function itemsReducer(items,action) {
             ]
             setData(updatedItems,action.dateAsKey)
             return updatedItems
-        } 
+        }
+         case 'newAdd': {
+            console.log("new add is triggered")
+            let updatedItems = [
+                ...items,
+                action.newItem
+            ]
+            setData(updatedItems,action.dateAsKey)
+            return updatedItems
+         } 
         
         case 'remove': {
             // console.log("remove is triggered",items,'action',action)
@@ -114,6 +137,18 @@ function itemsReducer(items,action) {
 
             // return items
             return items.filter((t) => t.key !== action.itemKey)
+        }
+
+        case 'select': {
+            console.log("action",action)
+            for (let i=0; i<items.length; i++) {
+                if (items[i].id == action.key) {
+                    items[i].isSelected = !items[i].isSelected 
+                    console.log("found",action.key, items)
+                    return items
+                } 
+            }
+            return items
         }
 
         case 'get': {

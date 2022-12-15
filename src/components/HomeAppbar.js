@@ -19,7 +19,7 @@ const HomeAppbar = (props) => {
         // console.log("plus button pressed", x, typeof(x))
         props.navigation.setParams({"modalVisible": true})
       }} />
-      <Appbar.Action icon="dots-vertical"/>
+      <Appbar.Action icon="dots-vertical" onPress={() => props.navigation.toggleDrawer()}/>
     </Appbar.Header> );
   }
 

@@ -50,13 +50,17 @@ const HomeScreen = (props) => {
     
     const [transactionItems, dispatch] = useReducer(itemsReducer, [])
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-    
+    const [categoryList, dispatch2] = useReducer(itemsReducer, []); // x.map((i) => ({key:i.id, value: i.categoryText})) 
     const [pickedDate, setPickedDate] = useState({
         dateString:'',
         dateAsKey: '',
     })
 
-    
+
+    const processCategoriesData = (data) =>  {
+        data = data.map((i) => ({key:i.id, value: i.categoryText, emojiLabel:i.emojiLabel}))
+        return data
+    }
     
     const showDatePicker = () => {
         // setDatePickerVisibility(true);
@@ -101,6 +105,8 @@ const HomeScreen = (props) => {
         else {
             console.log("Date not changed", isDatePickerVisible, props.route.params.isDatePickerVisible)
         }
+
+        getData("transactionCategories", dispatch2,processCategoriesData)
         // console.log("transaction item----->>", transactionItems);
 
     },[props.route.params]);
@@ -137,7 +143,7 @@ const HomeScreen = (props) => {
                 </View>
             </View>
             <View style={styles.centeredView}>
-                <ItemAddView isModalVisible={isModalVisible} dateAsKey={pickedDate.dateAsKey} itemAddCallback={dispatch} {...props}/>
+                <ItemAddView isModalVisible={isModalVisible} dateAsKey={pickedDate.dateAsKey} categoryList={categoryList} itemAddCallback={dispatch} {...props}/>
             </View>
             <DateTimePickerModal
                 isVisible={isDatePickerVisible}

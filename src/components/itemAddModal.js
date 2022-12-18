@@ -1,5 +1,6 @@
 import {Button, Modal, StyleSheet, Text, View, TextInput, Switch} from 'react-native';
 import React from 'react';
+import {getDataCategories} from '../utils/tasksUtil';
 import { useForm, Controller } from "react-hook-form"; //  https://react-hook-form.com/
 import {useState} from 'react';
 import SelectDropdown from 'react-native-select-dropdown'; //  https://www.npmjs.com/package/react-native-select-dropdown 
@@ -7,13 +8,13 @@ import { SelectList, MultipleSelectList } from 'react-native-dropdown-select-lis
 // import EmojiPicker from 'emoji-picker-react';  // https://www.npmjs.com/package/emoji-picker-react ; https://yarnpkg.com/package/emoji-picker-react
 // Menu from react native paper - https://stackoverflow.com/questions/61604500/how-do-i-pass-a-selected-item-from-react-native-paper-menu-to-input-textinput-on
 
-const ItemAddView = ({navigation, isModalVisible, dateAsKey, itemAddCallback}) => {
-  // console.log("itemAddView",Date.now());
+const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAddCallback}) => {
+  // console.log("categoryList-->",categoryList);
   // var isDebit = true;
-  const [isDebit, setIsDebit] = useState(true);
+  // const [isDebit, setIsDebit] = useState(true);
   // const toggleSwitch = () => isDebit=!isDebit;
-  const toggleSwitch = () => setIsDebit(previousState => !previousState);
-  // const { register, handleSubmit } = useForm();
+  // const toggleSwitch = () => setIsDebit(previousState => !previousState);
+  // console.log("rerender - ItemAddView ",categoryList)
   const { control, handleSubmit, formState: { errors }, reset  } = useForm({
     defaultValues: {
       title: 'Misc',
@@ -22,10 +23,14 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey, itemAddCallback}) =
       category: [],
     }
   });
-  // const [selected, setSelected] = React.useState([]);
-  var mycategory;
+  const [selectedCategories, setSelectedCategories] = React.useState([]);
   const onSubmit = data => {
-    console.log("data---->-",data)
+    console.log("data---->-",data.category,typeof(data.category))
+    console.log("selected categories", selectedCategories,"test")
+    // data.category((val) => {
+    //   console.log("val")
+    // })
+
     let key = Date.now()
     // var m = {type: 'add', key: Date.now(), dateAsKey: dateAsKey, date: "12-10-2022",...data}
     // console.log("onSubmit----->",data, "dateAsKeyyy->",dateAsKey,"the dict--->",m)
@@ -40,18 +45,14 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey, itemAddCallback}) =
       addTime: key,
       isCredit: data.isCredit  // true - false
     }
-    // itemAddCallback({type: 'add', key: Date.now(), dateAsKey: dateAsKey,...data});
+    // itemAddCallback({type: 'add', key: Date.now(), dateAsKey: dateAsKey,...data}); old
     itemAddCallback({type: 'newAdd', dateAsKey: dateAsKey, newItem: newItem});
     reset()
+    setSelectedCategories([])
     navigation.setParams({"modalVisible": false})
   }
 
   return (
-      // <View style={styles.modalView}>
-      //   <Text style={{ fontSize: 30 }}>This is a modal!</Text>
-      //   <Button onPress={() => navigation.goBack()} title="Dismiss" />
-      // </View>
-
       <Modal
         animationType='slide'
         transparent={true}
@@ -101,6 +102,7 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey, itemAddCallback}) =
                       onChangeText={onChange}
                       value={value}
                       placeholder="0.0"
+                      keyboardType='number-pad'
                     />
                   </View>
                 </View>
@@ -148,37 +150,75 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey, itemAddCallback}) =
             />
             <Controller
               control={control}
+              name="category"
               rules={{
               maxLength: 100,
               }}
               // render={({ field: { onChange, onBlur, value } }) => (
-              render={({field: { onChange, onBlur, value }}) => (
+              // render={({field: { onChange, onBlur, value }}) => (
                 
-                <View style={{flexDirection: "row"}}>
-                  <Text style={{textAlignVertical: "center", flex: 1}}>Category</Text>
+              //   <View style={{flexDirection: "row"}}>
+              //     <Text style={{textAlignVertical: "center", flex: 1}}>Category</Text>
+              //     <View style={{flex:2, padding: 0}}>
+              //         <MultipleSelectList 
+              //             setSelected={(val) => onChange(val)} 
+              //             style={{borderRadius: 10}}
+              //             label="Categories"
+              //             value={value}
+              //             placeholder='Select category'
+              //             dropdownShown={false}
+              //             // allowNewEntries = {true}
+              //             save="value"
+              //             data={[
+              //               // [{"categoryText": "Clothing", "emojiLabel": "👕", "id": 1670905629}, {"categoryText": "Food", "emojiLabel": "🥗", "id": 1670905718}, {"categoryText": "Entertainment", "emojiLabel": "🍿", "id": 1670905757}, {"categoryText": "Travel", "emojiLabel": "🚴‍♂️", "id": 1670905999}, {"categoryText": "Grocery", "emojiLabel": "🛒", "id": 1670906132}, {"categoryText": "Snacks", "emojiLabel": "🍪", "id": 1670906173}]
+              //               {key:1,value:"Food"}, {key:2,value:"Entertainment"}, {key:3,value:"Snacks"},{key:4,value:"Home Essentials"},{key:5,value:"Groceries"}, {key:6,value:"Travel"}, {key:7,value:"Other"}
+              //             ]} 
+              //         />
+              //     </View>
+              //   </View>
+              // )}
+              render={({field: { onChange, onBlur, value }}) => {
+                // console.log("category value->",value, typeof(value))
+                return (<View style={{flexDirection: "row"}}>
+                  {/* <Text style={{textAlignVertical: "center", flex: 1}}>Category</Text> */}
                   <View style={{flex:2, padding: 0}}>
                       <MultipleSelectList 
-                          setSelected={(val) => onChange(val)} 
+                          // data={[
+                          //   {"categoryText": "Clothing", "emojiLabel": "👕", "id": 1670905629}, {"categoryText": "Food", "emojiLabel": "🥗", "id": 1670905718}, {"categoryText": "Entertainment", "emojiLabel": "🍿", "id": 1670905757}, {"categoryText": "Travel", "emojiLabel": "🚴‍♂️", "id": 1670905999}, {"categoryText": "Grocery", "emojiLabel": "🛒", "id": 1670906132}, {"categoryText": "Snacks", "emojiLabel": "🍪", "id": 1670906173}
+                          //   {value: "Clothing", key: 1670905629}, {value: "Food", key: 1670905718}, {value: "Entertainment", key: 1670905757}, {value: "Travel", key: 1670905999}, {value: "Grocery", key: 1670906132}, {value: "Snacks", key: 1670906173}
+                          //   {key:1,value:"Food"}, {key:2,value:"Entertainment"}, {key:3,value:"Snacks"},{key:4,value:"Home Essentials"},{key:5,value:"Groceries"}, {key:6,value:"Travel"}, {key:7,value:"Other"}
+                          // ]} 
+                          data={categoryList}
+                          // setSelected={(val) => {
+                          //   // setSelected(val)
+                          //   // let val2 = Array(val)
+                            
+                          //   console.log("setSelected", value)
+                          //   onChange(value)
+
+                          // }}
+                          setSelected={setSelectedCategories}
+                          // setSelected={setMyCategory}
                           style={{borderRadius: 10}}
                           label="Categories"
-                          value={value}
+                          // value={value}
                           placeholder='Select category'
                           dropdownShown={false}
                           // allowNewEntries = {true}
                           save="value"
-                          data={[
-                            {key:1,value:"Food"}, {key:2,value:"Entertainment"}, {key:3,value:"Snacks"},{key:4,value:"Home Essentials"},{key:5,value:"Groceries"}, {key:6,value:"Travel"}, {key:7,value:"Other"}
-                          ]} 
                       />
                   </View>
-                </View>
-              )}
-              name="category"
+                </View>)
+              }}
+              
             />
             
 
             {/* <MultipleSelectList 
-                setSelected={(val) => setSelected(val)} 
+                setSelected={(val) => {
+                  setSelected(val)
+                  console.log("val-->",val,typeof(val))
+                }} 
                 dropdownShown={false}
                 allowNewEntries = {true}
                 search={true}
@@ -215,8 +255,6 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey, itemAddCallback}) =
               <View style={styles.customButton}>
                 <Button title='Close' onPress={() => { 
                     reset()
-                    // console.log("closing::", mycategory)
-                    // itemAddCallback({type: 'add', key: Date.now(), title: "test1", label: "food", transactionType: "credit", amount: 450, date: "12-10-2022"});
                     navigation.setParams({"modalVisible": false})
                 }}/>
               </View>
@@ -268,6 +306,5 @@ const styles = StyleSheet.create({
     flex: 1
   }
 });
-
 
 export default ItemAddView;

@@ -10,13 +10,13 @@ const TransactionItemCard = (props) => {
 
       <AppleStyleSwipeableRow dispatchCallback={props.dispatchCallback} dateAsKey={props.dateAsKey} itemKey={props.addTime}>
         <RectButton style={styles.rectButton} onPress={() => window.alert("test1")}>
-        <Text style={styles.fromText}>{props.title}</Text>
-        <Text numberOfLines={2} style={styles.messageText}>
-        {/* {props.label} */}
-        Food; Home Essentials; Snacks
-        </Text>
-        <Text style={styles.dateText}>{props.amount}</Text>
-      </RectButton>
+          <Text style={styles.fromText}>{props.title}</Text>
+          <Text numberOfLines={2} style={styles.messageText}>
+          {/* {props.label} */}
+          Food; Home Essentials; Snacks
+          </Text>
+          <Text style={styles.dateText}>{props.amount}</Text>
+        </RectButton>
       </AppleStyleSwipeableRow>
 
         // <View style={styles.mycard}>

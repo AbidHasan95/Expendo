@@ -10,13 +10,17 @@ const setData = async (updatedItems, dateAsKey) => {
     }
 }
 
-const getData = async (dateAsKey, dispatch) => {
+const getData = async (dateAsKey, dispatch, processData) => {
     try {
         AsyncStorage.getItem(dateAsKey)
             .then(value => {
                 if (value != null) {
                     console.info("fetched data",value)
                     let fetchedData = JSON.parse(value)
+                    if (processData!==undefined) {
+                        fetchedData = processData(fetchedData)
+                        console.log("processing data-----------", fetchedData)
+                    }
                     dispatch({type: 'get', fetchedData: fetchedData})
                     // return value
                 }
@@ -24,6 +28,23 @@ const getData = async (dateAsKey, dispatch) => {
                     console.info("No items fetched for",dateAsKey)
                     dispatch({type: 'get', fetchedData: []})
                     // return -1
+                }
+            })
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const getDataCategories = async (dateAsKey, dispatch) => {
+    try {
+        AsyncStorage.getItem(dateAsKey)
+            .then(value => {
+                if (value != null) {
+                    console.info("fetched data",value)
+                }
+                else {
+                    console.info("No items fetched for",dateAsKey)
+
                 }
             })
     } catch (error) {
@@ -84,41 +105,9 @@ const removeData = async (dateAsKey, itemkey) => {
     }
 }
 
-function categoriesReducer(items, action) {
-    switch (action.type) {
-        case 'select': {
-            for (let i=0; i<items.length; i++) {
-                let item = items[i]
-                if (item.id == action.key) {
-                    items[i].isSelected = true
-                    return items
-                } 
-            }
-        }
-    }
-}
-
 function itemsReducer(items,action) {
     // console.log("test itemsReducer",items,action)
     switch (action.type) {
-        case 'add': {
-            console.log("add is triggered")
-            let updatedItems = [
-                ...items,
-                {
-                    key: action.key, // 1670065672356
-                    title: action.title, // Veg Pulao
-                    label: action.label, //Food, Misc
-                    transactionType: action.transactionType, // Credit/Debit
-                    amount: action.amount,
-                    date: action.dateAsKey, // 221203 - 03 Dec 22
-                    addTime: action.key,
-                    isCredit: action.isCredit  // true - false
-                }
-            ]
-            setData(updatedItems,action.dateAsKey)
-            return updatedItems
-        }
          case 'newAdd': {
             console.log("new add is triggered")
             let updatedItems = [
@@ -137,6 +126,14 @@ function itemsReducer(items,action) {
 
             // return items
             return items.filter((t) => t.key !== action.itemKey)
+        }
+
+        case 'removeItems': { //Remove items corresponding to a outer key
+            // let keyItentifier = action.keyIdentifier
+            console.log("Came to remove items", action.keysToRemove, action.dateAsKey)
+            let updatedItems = items.filter((t)=> !action.keysToRemove.includes(t[action.keyItentifier]))
+            setData(updatedItems,action.dateAsKey)
+            return updatedItems
         }
 
         case 'select': {

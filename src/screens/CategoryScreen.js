@@ -1,4 +1,4 @@
-import {useState, useEffect, useReducer} from 'react';
+import {useState, useEffect, useReducer, useRef} from 'react';
 // import * as React from 'react';
 import { View, FlatList, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
 import { Chip, Text, Modal, Portal, Provider, TextInput, Button } from 'react-native-paper';
@@ -8,96 +8,32 @@ import { Appbar } from 'react-native-paper';
 // https://www.stefanjudis.com/snippets/how-to-detect-emojis-in-javascript-strings/
 // const emojiRegex = /\p{Emoji}/u;
 // emojiRegex.test('⭐⭐'); // true
-const textList = [
-    {   id: 1,
-        text: "food"
-    },
-    {
-        id: 2,
-        text: "Clothing"
-    },
-    {
-        id: 3,
-        text: "Travel"
-    },
-    {
-        id: 4,
-        text: "G"
-    },
-    {   id: 5,
-      text: "food"
-    },
-    {
-        id: 6,
-        text: "Clothing"
-    },
-    {
-        id: 7,
-        text: "Travel"
-    },
-    {
-        id: 8,
-        text: "Grocery"
-    },
-    {   id: 9,
-      text: "food"
-    },
-    {
-        id: 10,
-        text: "Clothing"
-    },
-    {
-        id: 11,
-        text: "Travel"
-    },
-    {
-        id: 12,
-        text: "G"
-    },
-    {   id: 13,
-      text: "food"
-    },
-    {
-        id: 14,
-        text: "Clothing"
-    },
-    {
-        id: 15,
-        text: "Travel"
-    },
-    {
-        id: 16,
-        text: "Grocery"
-    }
-]
-// const Item = ({ title, key, isSelected, dispatch }) => (
-//   <View style={styles.item}>
-//     {/* <Text style={styles.title}>{title}</Text> */}
-//     <View style={styles.chip}>
-//         {/* <Chip icon="information" mode="flat" compact={true} onPress={() => console.log('Pressed')}>Example Chipssss</Chip> */}
-//         <Chip 
-//           icon={() => null} 
-//           mode="flat" 
-//           compact={true} 
-//           selected={isSelected} 
-//           showSelectedOverlay={true} 
-//           onLongPress={()=> {dispatch({type: 'select', key: key})}} 
-//           onPress={() => console.log('Pressed')}
-//         >{title}</Chip>
-//     </View>
-//   </View>
-// );
+// Update/re-render a single item in flatlist instead of the whole 
 
+const MyFlatList = ({categoryList, renderItem}) => {
+  const [isolatedCategoryList, updateCategoryList2] = useState(categoryList)
+  useEffect(()=> {
+    updateCategoryList2(categoryList)
+  },[])
+  return (
+    <FlatList
+      data={categoryList}
+      renderItem={renderItem}
+      scrollEnabled={true}
+      keyExtractor={item => item.id}
+      contentContainerStyle={{ flex: 1,flexDirection: 'row', flexWrap: "wrap",padding: 5}}
+    />
+  )
+}
 
-
-const HomeAppbar = ({navigation}) => {
+const HomeAppbar = ({navigation, deleteCallback, testVar}) => {
   return(
     <Appbar.Header>
       <Appbar.Content title="Add Category" />
       {/* <Appbar.BackAction onPress={() => {}} /> */}
       {/* <Appbar.Content title="Expendo1" /> */}
       <Appbar.Action icon="delete-outline" onPress={() => {
-        console.log("delete button pressed", Date.now())
+        deleteCallback(testVar.current)
       }} />
       <Appbar.Action icon="plus-circle" onPress={() => {
       }} />
@@ -105,58 +41,90 @@ const HomeAppbar = ({navigation}) => {
     </Appbar.Header> );
 }
 
+const Item = ({ title, itemkey, testVar }) => {
+  const [counter, updateCounter] = useState(0)
+  // const forceUpdate = updateComponent
+  
+  // let isSelected2 = selectedChips.includes(itemkey)
+  let isSelected2 = testVar.current.includes(itemkey)
+  console.log("Item comp", title, itemkey, testVar.current)
+  return (
+    <View style={styles.item}>
+      {/* <Text style={styles.title}>{title}</Text> */}
+      <View style={styles.chip}>
+          {/* <Chip icon="information" mode="flat" compact={true} onPress={() => console.log('Pressed')}>Example Chipssss</Chip> */}
+          <Chip 
+            icon={() => null} 
+            mode="flat" 
+            compact={true} 
+            selected={isSelected2} 
+            showSelectedOverlay={true} 
+            
+            onPress={()=> {
+              // dispatch({type: 'select', key: itemkey})
+              // forceUpdate()
+              
+              if (testVar.current.includes(itemkey)) {
+                testVar.current = testVar.current.filter((t) => t!=itemkey)
+                // setSelectedChips(selectedChips.filter((t) => t!=itemkey))
+              }
+              else {
+                testVar.current = [...testVar.current,itemkey]
+                // setSelectedChips([...selectedChips,itemkey])
+              }
+              updateCounter(counter+1)
+              // this.props.selected = true
+            }} 
+            onLongPress={() => {
+              // if (selectedChips.includes(itemkey))
+              //   setSelectedChips(selectedChips.filter((t) => t!=itemkey))
+              // else
+              //   setSelectedChips([...selectedChips,itemkey])
+              
+              if (testVar.current.includes(itemkey)) {
+                testVar.current = testVar.current.filter((t) => t!=itemkey)
+                setSelectedChips(selectedChips.filter((t) => t!=itemkey))
+              }
+              else {
+                testVar.current = [...testVar.current,itemkey]
+                setSelectedChips([...selectedChips,itemkey])
+              }
+            }
+            }
+          >{title}</Chip>
+      </View>
+    </View>)
+};
+
 const ExpenditureCategoryScreen = ({navigation}) => {
   // navigation.setOptions({ title: 'Updated!' })
-  console.log("Rerender",Date.now())
+  console.log("-----------------------Rerender---------------------",Date.now())
   const [categoryList, dispatch] = useReducer(itemsReducer, []);
   const [selectedChips,setSelectedChips] = useState([]);
-  const Item = ({ title, itemkey, isSelected, dispatch }) => {
-    
-    console.log("Item comp", title, itemkey, selectedChips)
-    let isSelected2 = selectedChips.includes(itemkey)
-    return (
-      <View style={styles.item}>
-        {/* <Text style={styles.title}>{title}</Text> */}
-        <View style={styles.chip}>
-            {/* <Chip icon="information" mode="flat" compact={true} onPress={() => console.log('Pressed')}>Example Chipssss</Chip> */}
-            <Chip 
-              icon={() => null} 
-              mode="flat" 
-              compact={true} 
-              selected={isSelected2} 
-              showSelectedOverlay={true} 
-              onLongPress={()=> {dispatch({type: 'select', key: itemkey})}} 
-              onPress={() => {
-                if (!selectedChips.includes(itemkey))
-                  setSelectedChips([...selectedChips,itemkey])
-                else
-                  setSelectedChips(selectedChips.filter((t) => t!=itemkey))
-                }
-              }
-            >{title}</Chip>
-        </View>
-      </View>)
-  };
+  const testVar = useRef([]) 
+
+  const deleteSelectedChips = (selectedCategories) => {
+    console.log("The selected chips->", selectedCategories)
+    dispatch({type: 'removeItems', dateAsKey: "transactionCategories",keysToRemove: selectedCategories, keyItentifier: 'id'})
+  }
+  function updateComponent() {
+    const [counter, updateCounter] = useState(0)
+    // updateCounter(counter+1)
+    return () => updateCounter(counter => counter + 1)
+  }
+  
   const renderItem = ({ item }) => {
     console.log("item-->",item.id)
     let categoryContent = item.categoryText + " " + item.emojiLabel
-    let isSelected = item.isSelected == true
+    // let isSelected = item.isSelected == true
     let item_id = item.id
     console.log("in renderr", item_id)
     return (
-      <Item title={categoryContent} itemkey={item_id} dispatch={dispatch} isSelected={isSelected}/>
+      <Item title={categoryContent} itemkey={item_id} testVar={testVar}/>
     )
   };
 
-  
-  // console.log("Hello")
   const [visible, setVisible] = useState(false);
-  const [someValue, setSomeValue] = useState('');
-  const [someValue2, setSomeValue2] = useState('');
-  const [emojiList, modifyEmojiList] = useState([]);
-  
-  
-
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
   const { control, handleSubmit, formState: { errors }, reset  } = useForm({
@@ -184,11 +152,12 @@ const ExpenditureCategoryScreen = ({navigation}) => {
     navigation.setOptions({ 
       title: 'Categories', 
       header: () => (
-        <HomeAppbar navigation={navigation} />
+        <HomeAppbar navigation={navigation} deleteCallback={deleteSelectedChips} testVar={testVar}/>
       ) 
     })
     // navigation.setOptions({ header: 'Updated!' })
     getData("transactionCategories", dispatch)
+    // navigation.setParams({"transactionCategories": categoryList}) // will re-render the home screen
 
   },[])
 
@@ -196,26 +165,16 @@ const ExpenditureCategoryScreen = ({navigation}) => {
     <SafeAreaView style={styles.container}>
         <Provider>
           {/* <Button onPress={() => navigation.goBack()} title="Go back home screen" /> */}
-          <Button icon="camera" mode="contained" onPress={() => navigation.goBack()}>Go back to home screen</Button>
-          <Button icon="camera" mode="outlined" onPress={showModal}>Add category</Button>
+          <View>
+            <Button icon="camera" mode="contained" onPress={() => navigation.goBack()}>Go back to home screen</Button>
+            <Button icon="camera" mode="outlined" onPress={showModal}>Add category</Button>
+          </View>
           <Portal>
             <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={styles.modalContainer}>
               <View>
                 <Text style={{marginBottom: 20}}>Add a transaction category.</Text>
                 <View style={{flexDirection: "column", justifyContent: "center"}}>
                   {/* https://github.com/callstack/react-native-paper/issues/2615 */}
-                  {/* <TextInput
-                    label="emoji"
-                    mode='outlined'
-                    value={someValue}
-                    onChangeText={text => setSomeValue(text)}
-                  />
-                  <TextInput
-                    label="category name"
-                    mode='outlined'
-                    value={someValue2}
-                    onChangeText={text => setSomeValue2(text)}
-                  /> */}
                   <Controller
                     control={control}
                     rules={{
@@ -223,17 +182,6 @@ const ExpenditureCategoryScreen = ({navigation}) => {
                       pattern: /\p{Emoji}/u,
                       // maxLength: 1,
                     }}
-                    // render={({ field: { onChange, onBlur, value } }) => (
-                    //   <View style={{margin: 10}}>
-                    //     <TextInput
-                    //       label="Emoji label"
-                    //       mode='outlined'
-                    //       onBlur={onBlur}
-                    //       onChangeText={onChange}
-                    //       value={value}
-                    //     />
-                    //   </View>
-                    // )}
                     render={({ field: { onChange, onBlur, value } }) => {
                       console.log("Emojiii",value, value?.length)
                       return(
@@ -278,7 +226,6 @@ const ExpenditureCategoryScreen = ({navigation}) => {
               </View>
             </Modal>
           </Portal>
-          {/* <Button style={{marginTop: 30}} onPress={showModal} title="Show"/> */}
           
           <FlatList
               data={categoryList}
@@ -287,21 +234,13 @@ const ExpenditureCategoryScreen = ({navigation}) => {
               keyExtractor={item => item.id}
               contentContainerStyle={{ flex: 1,flexDirection: 'row', flexWrap: "wrap",padding: 5}}
           />
+          {/* <MyFlatList categoryList={categoryList}  renderItem={renderItem}/> */}
          {/* <View style={{flexDirection: "row", flexWrap:"wrap"}}>
              <View style={styles.chip}>
                  <Chip icon="information" mode="flat" compact={true} onPress={() => console.log('Pressed')}>Example Chip</Chip>
              </View>
              <View style={styles.chip}>
                  <Chip icon="information" mode="flat" compact={true} onPress={() => console.log('Pressed')}>Example Chips</Chip>
-             </View>
-             <View style={styles.chip}>
-                 <Chip icon="information" mode="flat" compact={true} onPress={() => console.log('Pressed')}>Examp Chip</Chip>
-             </View>
-             <View style={styles.chip}>
-                 <Chip icon="information" mode="flat" compact={true} onPress={() => console.log('Pressed')}>Example Chip</Chip>
-             </View>
-             <View style={styles.chip}>
-                 <Chip icon="information" mode="flat" compact={true} onPress={() => console.log('Pressed')}>Example Chip</Chip>
              </View>
          </View> */}
         </Provider>
@@ -314,8 +253,6 @@ const styles = StyleSheet.create({
     flex: 1,
     // marginTop: StatusBar.currentHeight || 0,
     marginTop: 0,
-    // flexDirection: "row", 
-    // flexWrap:"wrap"
   },
   item: {
     // backgroundColor: '#f9c2ff',
@@ -336,9 +273,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white', 
     padding: 20,
     margin: 20,
-    // height: "40%",
     borderRadius: 20,
-    // minHeight: "50%"
   }
 });
 

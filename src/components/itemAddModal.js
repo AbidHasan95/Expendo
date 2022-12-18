@@ -33,7 +33,7 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAd
     // })
 
     let key = Date.now()
-    // var m = {type: 'add', key: Date.now(), dateAsKey: dateAsKey, date: "12-10-2022",...data}
+    // var m = {type: 'add', key: Date.now(), dateAsKey: dateAsKey, date: "12-10-2022",...data} //
     // console.log("onSubmit----->",data, "dateAsKeyyy->",dateAsKey,"the dict--->",m)
     // itemAddCallback({type: 'add', key: Date.now(), title: "test1", label: "food", transactionType: "credit", amount: 450, date: "12-10-2022"});
     var newItem = {

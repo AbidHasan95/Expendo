@@ -88,7 +88,7 @@ const removeData = async (dateAsKey, itemkey) => {
                     var updatedValue = JSON.parse(value).filter((t) => t.key !== itemkey)
                     // console.log("Value after remove",updatedValue)
                     setData(updatedValue,dateAsKey)
-                    // getAllKeys()
+                    getAllKeys()
                     // multiRemove()
                     // let fetchedData = JSON.parse(value)
                     // dispatch({type: 'get', fetchedData: fetchedData})

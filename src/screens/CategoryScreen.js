@@ -172,7 +172,7 @@ const ExpenditureCategoryScreen = ({navigation}) => {
           <Portal>
             <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={styles.modalContainer}>
               <View>
-                <Text style={{marginBottom: 20}}>Add a transaction category.</Text>
+                {/* <Text style={{marginBottom: 20}}>Add a transaction category.</Text> */}
                 <View style={{flexDirection: "column", justifyContent: "center"}}>
                   {/* https://github.com/callstack/react-native-paper/issues/2615 */}
                   <Controller
@@ -185,7 +185,7 @@ const ExpenditureCategoryScreen = ({navigation}) => {
                     render={({ field: { onChange, onBlur, value } }) => {
                       console.log("Emojiii",value, value?.length)
                       return(
-                        <View style={{margin: 10}}>
+                        <View style={{marginBottom: 5}}>
                           <TextInput
                             label="Emoji label"
                             mode='outlined'
@@ -205,7 +205,7 @@ const ExpenditureCategoryScreen = ({navigation}) => {
                     required: true,
                     }}
                     render={({ field: { onChange, onBlur, value } }) => (
-                      <View style={{margin: 10}}>
+                      <View style={{marginBottom: 5}}>
                         <TextInput
                           style={{}}
                           label="Category"
@@ -219,8 +219,8 @@ const ExpenditureCategoryScreen = ({navigation}) => {
                     name="categoryText"
                   />
                   {errors.categoryText && <Text style={{color: "red"}}>This is required</Text>}
-                  <View style={{ borderWidth: 0,paddingHorizontal:10,flexDirection:"row" ,justifyContent: "center"}}>
-                    <Button style={{padding: 2, width: "100%"}} mode="outlined" onPress={handleSubmit(onSubmit)}>Submit</Button>
+                  <View style={{ borderWidth: 0,paddingHorizontal:10,flexDirection:"row" ,justifyContent: "center", marginTop:5}}>
+                    <Button style={{padding: 2, borderRadius: 10}} mode="contained" onPress={handleSubmit(onSubmit)}>Submit</Button>
                   </View>
                 </View>
               </View>

@@ -1,10 +1,11 @@
-import {Button, Modal, StyleSheet, Text, View, TextInput, Switch} from 'react-native';
+import {Button, Modal, StyleSheet, Text, View, Switch} from 'react-native';
+import { Portal, Provider, TextInput } from 'react-native-paper';
 import React from 'react';
 import {getDataCategories} from '../utils/tasksUtil';
 import { useForm, Controller } from "react-hook-form"; //  https://react-hook-form.com/
 import {useState} from 'react';
 import SelectDropdown from 'react-native-select-dropdown'; //  https://www.npmjs.com/package/react-native-select-dropdown 
-import { SelectList, MultipleSelectList } from 'react-native-dropdown-select-list'; // https://github.com/danish1658/react-native-dropdown-select-list ; https://www.npmjs.com/package/react-native-dropdown-select-list 
+import { MultipleSelectList } from 'react-native-dropdown-select-list'; // https://github.com/danish1658/react-native-dropdown-select-list ; https://www.npmjs.com/package/react-native-dropdown-select-list 
 // import EmojiPicker from 'emoji-picker-react';  // https://www.npmjs.com/package/emoji-picker-react ; https://yarnpkg.com/package/emoji-picker-react
 // Menu from react native paper - https://stackoverflow.com/questions/61604500/how-do-i-pass-a-selected-item-from-react-native-paper-menu-to-input-textinput-on
 
@@ -25,8 +26,8 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAd
   });
   const [selectedCategories, setSelectedCategories] = React.useState([]);
   const onSubmit = data => {
-    console.log("data---->-",data.category,typeof(data.category))
-    console.log("selected categories", selectedCategories,"test")
+    console.log("data---->-",data,"selectedCategories",selectedCategories)
+    console.log("categories List",categoryList)
     // data.category((val) => {
     //   console.log("val")
     // })
@@ -46,7 +47,7 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAd
       isCredit: data.isCredit  // true - false
     }
     // itemAddCallback({type: 'add', key: Date.now(), dateAsKey: dateAsKey,...data}); old
-    itemAddCallback({type: 'newAdd', dateAsKey: dateAsKey, newItem: newItem});
+    // itemAddCallback({type: 'newAdd', dateAsKey: dateAsKey, newItem: newItem}); // new
     reset()
     setSelectedCategories([])
     navigation.setParams({"modalVisible": false})
@@ -69,14 +70,22 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAd
               }}
               render={({ field: { onChange, onBlur, value } }) => (
                 <View style={{flexDirection: "row"}}>
-                  <Text style={{flex:1,textAlignVertical: "center"}}>Description</Text>
+                  {/* <Text style={{flex:1,textAlignVertical: "center"}}>Description</Text> */}
                   <View style={{flex: 2}}>
-                    <TextInput
+                    {/* <TextInput // textinput vanila react-native
                       style={styles.textinput}
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
                       placeholder="Transaction title"
+                    /> */}
+                    <TextInput
+                      // style={styles.textinput}
+                      mode='outlined'
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                      label="Transaction Description"
                     />
                   </View>
                 </View>
@@ -94,14 +103,23 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAd
               }}
               render={({ field: { onChange, onBlur, value } }) => (
                 <View style={{flexDirection: "row"}}>
-                  <Text style={{textAlignVertical: "center", flex: 1}}>Amount</Text>
+                  {/* <Text style={{textAlignVertical: "center", flex: 1}}>Amount</Text> */}
                   <View style={{flex: 2}}>
-                    <TextInput
+                    {/* <TextInput  // textinput vanila react-native
                       style={styles.textinput}
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
                       placeholder="0.0"
+                      keyboardType='number-pad'
+                    /> */}
+                    <TextInput
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      mode='outlined'
+                      value={value}
+                      placeholder="0"
+                      label="Enter amount"
                       keyboardType='number-pad'
                     />
                   </View>
@@ -110,7 +128,7 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAd
               name="amount"
             />
             {errors.amount && <Text>Amount is invalid.</Text>}
-            <Controller
+            {/* <Controller
               control={control}
               rules={{
               maxLength: 100,
@@ -147,7 +165,7 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAd
                 </View>
               )}
               name="label"
-            />
+            /> */}
             <Controller
               control={control}
               name="category"
@@ -179,7 +197,7 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAd
               // )}
               render={({field: { onChange, onBlur, value }}) => {
                 // console.log("category value->",value, typeof(value))
-                return (<View style={{flexDirection: "row"}}>
+                return (<View style={{flexDirection: "row", marginTop:5}}>
                   {/* <Text style={{textAlignVertical: "center", flex: 1}}>Category</Text> */}
                   <View style={{flex:2, padding: 0}}>
                       <MultipleSelectList 
@@ -205,7 +223,7 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAd
                           placeholder='Select category'
                           dropdownShown={false}
                           // allowNewEntries = {true}
-                          save="value"
+                          save="key"
                       />
                   </View>
                 </View>)
@@ -232,6 +250,7 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAd
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => {
                   // return 
+                  console.log("isCredit",value)
                   return (<View style={{flexDirection: 'row'}}>
                     <Text style={{textAlignVertical: 'center'}}>Debit</Text>
                     <Switch

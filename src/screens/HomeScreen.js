@@ -5,7 +5,6 @@ import TransactionItemCard from '../components/TransactionItemCard'
 import {itemsReducer, getData} from '../utils/tasksUtil';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from 'moment';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /*
 Y/YYYY -> Year

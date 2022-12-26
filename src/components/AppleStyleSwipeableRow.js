@@ -43,7 +43,8 @@ export default class AppleStyleSwipeableRow extends Component {
         // eslint-disable-next-line no-alert
         if (text=='Delete') {
           // console.log("Delete props==>",this.props)
-          this.props.dispatchCallback({type: 'remove', dateAsKey: this.props.dateAsKey, itemKey: this.props.itemKey})
+          this.props.transactionItemDeleteCallback(this.props.docName, this.props.itemKey)
+          // this.props.dispatchCallback({type: 'remove', dateAsKey: this.props.dateAsKey, itemKey: this.props.itemKey})
         }
         // window.alert(text);
       };

@@ -9,7 +9,7 @@ import { MultipleSelectList } from 'react-native-dropdown-select-list'; // https
 // import EmojiPicker from 'emoji-picker-react';  // https://www.npmjs.com/package/emoji-picker-react ; https://yarnpkg.com/package/emoji-picker-react
 // Menu from react native paper - https://stackoverflow.com/questions/61604500/how-do-i-pass-a-selected-item-from-react-native-paper-menu-to-input-textinput-on
 
-const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAddCallback}) => {
+const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,categoryList, dateTimeKeys,itemAddCallback, expenditureSummary,expenditureSummaryDispatch}) => {
   // console.log("categoryList-->",categoryList);
   // var isDebit = true;
   // const [isDebit, setIsDebit] = useState(true);
@@ -27,27 +27,44 @@ const ItemAddView = ({navigation, isModalVisible, dateAsKey,categoryList, itemAd
   const [selectedCategories, setSelectedCategories] = React.useState([]);
   const onSubmit = data => {
     console.log("data---->-",data,"selectedCategories",selectedCategories)
-    console.log("categories List",categoryList)
+    console.log("categories List",categoryList) // [{"emojiLabel": "👕", "key": "1672049184", "value": "Clothing"}, {"emojiLabel": "🍿", "key": "1672049225", "value": "Entertainment"}, {"emojiLabel": "🛍️", "key": "1672049236", "value": "Grocery"}, {"emojiLabel": "🍛", "key": "1672049266", "value": "Food"}, {"emojiLabel": "🛒", "key": "1672049303", "value": "Home essentials"}, {"emojiLabel": "🚗", "key": "1672049335", "value": "Travel"}, {"emojiLabel": "🎁", "key": "1672052107", "value": "Gift"}]
+    var labels = categoryList.filter((i)=> selectedCategories.includes(i.key)).map((t)=> t.emojiLabel)
+    var categories = categoryList.filter((i)=> selectedCategories.includes(i.key)).map((t)=> t.value)
+    console.log("emojis", labels)
     // data.category((val) => {
     //   console.log("val")
     // })
 
     let key = Date.now()
-    // var m = {type: 'add', key: Date.now(), dateAsKey: dateAsKey, date: "12-10-2022",...data} //
+    // var m = {type: 'add', key: Date.now(), dateAsKey: dateAsKey, date: "12-10-2022",...data} 
     // console.log("onSubmit----->",data, "dateAsKeyyy->",dateAsKey,"the dict--->",m)
     // itemAddCallback({type: 'add', key: Date.now(), title: "test1", label: "food", transactionType: "credit", amount: 450, date: "12-10-2022"});
-    var newItem = {
+    var deltaItem = {
       key: key, // 1670065672356
       title: data.title, // Veg Pulao
-      label: data.label, //Food, Misc
-      transactionType: data.transactionType, // Credit/Debit
-      amount: data.amount,
+      emojiLabels: labels, // emojis ["👕", "😍"]
+      categories,
+      amount: parseInt(data.amount),
       date: dateAsKey, // 221203 - 03 Dec 22
       addTime: key,
       isCredit: data.isCredit  // true - false
     }
+    var updatedItems = {itemsArray: [deltaItem,...transactionItems]}
+    const operation = "add"
     // itemAddCallback({type: 'add', key: Date.now(), dateAsKey: dateAsKey,...data}); old
-    // itemAddCallback({type: 'newAdd', dateAsKey: dateAsKey, newItem: newItem}); // new
+    itemAddCallback({
+      type: 'newAdd', 
+      collectionName: "dailyRecords", 
+      docName: dateAsKey,
+      updatedItems: updatedItems, 
+      dateTimeKeys,
+      deltaItem,
+      propName: "itemsArray",
+      expenditureSummaryDispatch,
+      expenditureSummary,
+      operation
+    }); // new
+    
     reset()
     setSelectedCategories([])
     navigation.setParams({"modalVisible": false})

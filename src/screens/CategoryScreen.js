@@ -3,7 +3,7 @@ import {useState, useEffect, useReducer, useRef} from 'react';
 import { View, FlatList, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
 import { Chip, Text, Modal, Portal, Provider, TextInput, Button } from 'react-native-paper';
 import { useForm, Controller } from "react-hook-form"; //  https://react-hook-form.com/
-import {itemsReducer, getData} from '../utils/tasksUtil';
+import {itemsReducer, getData, getFirestoreDoc,getFirestoreCollection} from '../utils/tasksUtil';
 import { Appbar } from 'react-native-paper';
 // https://www.stefanjudis.com/snippets/how-to-detect-emojis-in-javascript-strings/
 // const emojiRegex = /\p{Emoji}/u;
@@ -34,6 +34,7 @@ const HomeAppbar = ({navigation, deleteCallback, testVar}) => {
       {/* <Appbar.Content title="Expendo1" /> */}
       <Appbar.Action icon="delete-outline" onPress={() => {
         deleteCallback(testVar.current)
+        testVar.current = []
       }} />
       <Appbar.Action icon="plus-circle" onPress={() => {
       }} />
@@ -41,7 +42,7 @@ const HomeAppbar = ({navigation, deleteCallback, testVar}) => {
     </Appbar.Header> );
 }
 
-const Item = ({ title, itemkey, testVar }) => {
+const Item = ({ title, itemkey, testVar,selectedChips, setSelectedChips }) => {
   const [counter, updateCounter] = useState(0)
   // const forceUpdate = updateComponent
   
@@ -105,7 +106,7 @@ const ExpenditureCategoryScreen = ({navigation}) => {
 
   const deleteSelectedChips = (selectedCategories) => {
     console.log("The selected chips->", selectedCategories)
-    dispatch({type: 'removeItems', dateAsKey: "transactionCategories",keysToRemove: selectedCategories, keyItentifier: 'id'})
+    dispatch({type: 'removeItems', collectionName: "transactionCategories",keysToRemove: selectedCategories, keyItentifier: 'id'})
   }
   function updateComponent() {
     const [counter, updateCounter] = useState(0)
@@ -120,7 +121,7 @@ const ExpenditureCategoryScreen = ({navigation}) => {
     let item_id = item.id
     console.log("in renderr", item_id)
     return (
-      <Item title={categoryContent} itemkey={item_id} testVar={testVar}/>
+      <Item title={categoryContent} itemkey={item_id} testVar={testVar} selectedChips={selectedChips} setSelectedChips={setSelectedChips}/>
     )
   };
 
@@ -144,8 +145,9 @@ const ExpenditureCategoryScreen = ({navigation}) => {
       emojiLabel: data.emojiLabel, 
       id: key
     }
+    // var updatedItems = [newItem, ...categoryList]
     // modifyEmojiList([...categoryList,{categoryText: data.categoryText, emojiLabel: data.emojiLabel, id: key}])
-    dispatch({type: 'newAdd', dateAsKey: "transactionCategories",newItem: newItem})
+    dispatch({type: 'newAdd', collectionName: "transactionCategories",docName: key,newItem: newItem})
   }
 
   useEffect(() => {
@@ -156,7 +158,8 @@ const ExpenditureCategoryScreen = ({navigation}) => {
       ) 
     })
     // navigation.setOptions({ header: 'Updated!' })
-    getData("transactionCategories", dispatch)
+    // getData("transactionCategories", dispatch)
+    getFirestoreCollection("transactionCategories",dispatch)
     // navigation.setParams({"transactionCategories": categoryList}) // will re-render the home screen
 
   },[])

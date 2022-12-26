@@ -20,6 +20,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import HomeAppbar from './src/components/HomeAppbar';
 import { StyleSheet} from 'react-native';
+import {db} from './config/firebase'
 
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { View, Button } from 'react-native';

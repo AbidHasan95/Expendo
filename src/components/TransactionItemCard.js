@@ -7,13 +7,12 @@ import AppleStyleSwipeableRow from './AppleStyleSwipeableRow';
 const TransactionItemCard = (props) => {
     // console.log("props--->",props)
     return (
-
-      <AppleStyleSwipeableRow dispatchCallback={props.dispatchCallback} dateAsKey={props.dateAsKey} itemKey={props.addTime}>
+      <AppleStyleSwipeableRow dispatchCallback={props.dispatchCallback} dateAsKey={props.dateAsKey} itemKey={props.addTime} dateTimeKeys={props.dateTimeKeys} docName={props.docName} transactionItemDeleteCallback={props.transactionItemDeleteCallback}>
         <RectButton style={styles.rectButton} onPress={() => window.alert("test1")}>
           <Text style={styles.fromText}>{props.title}</Text>
           <Text numberOfLines={2} style={styles.messageText}>
-          {/* {props.label} */}
-          Food; Home Essentials; Snacks
+          {props.emojiLabels}
+          {/* Food; Home Essentials; Snacks */}
           </Text>
           <Text style={styles.dateText}>{props.amount}</Text>
         </RectButton>

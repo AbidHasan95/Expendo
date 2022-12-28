@@ -1,10 +1,51 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';  // https://react-native-async-storage.github.io/async-storage/docs/api
 // TODO - Replace by react-native-mmkv-storage -> https://rnmmkv.vercel.app
-// import {getFirestore} from 'firebase/firestore';
-// import {firebase} from '../../config/firebase';
 import {db} from '../../config/firebase';
-import { logger } from "react-native-logs"; //https://www.npmjs.com/package/react-native-logs
-var log = logger.createLogger();
+import { logger,consoleTransport } from "react-native-logs"; //https://www.npmjs.com/package/react-native-logs
+
+
+const defaultConfig = {
+    levels: {
+      debug: 0,
+      info: 1,
+      warn: 2,
+      error: 3,
+    },
+    severity: "debug",
+    transport: consoleTransport,
+    transportOptions: {
+      colors: {
+        info: "blueBright",
+        warn: "yellowBright",
+        error: "redBright",
+        debug: "cyanBright",
+      },
+    },
+    async: true,
+    dateFormat: "time",
+    printLevel: true,
+    printDate: true,
+    enabled: true,
+  };
+var log = logger.createLogger(defaultConfig);
+// name 	   ansi code 	   note
+// default 	    null  	       default console color
+// black 	     30 	
+// red 	         31 	
+// green 	     32 	
+// yellow 	     33 	
+// blue 	     34 	
+// magenta 	     35 	
+// cyan 	     36 	
+// white 	     37 	
+// grey 	     90 	
+// redBright 	 91 	
+// greenBright 	 92 	
+// yellowBright  93 	
+// blueBright 	 94 	
+// magentaBright 95 	
+// cyanBright 	 96 	
+// whiteBright 	 97
 
 const setData = async (updatedItems, dateAsKey) => {
     try {
@@ -29,6 +70,7 @@ const setDataFirestore = async (collectionName, docName,itemObj) => {
 }
 
 const getFirestoreCollection = async (collectionName,dispatch,processData) => {
+    log.debug("Came in getFirestoreCollection", collectionName)
     const snapshot = await db.collection(collectionName).get();
     var fetchedData = snapshot.docs.map(doc => {
             // console.log("docData", doc.data())
@@ -120,7 +162,7 @@ const updateExpenditureItem = async (collectionName, docName,expenditureSummary,
     return data
 }
 
-const updateExpenditureSummary = async (deltaItem, expenditureSummary,dateTimeKeys, dispatch,operation) => {
+const updateExpenditureSummary_old = async (deltaItem, expenditureSummary,dateTimeKeys, dispatch,operation) => {
     const multiplier = operation==="remove"?-1:1;
     var transType = deltaItem.isCredit?"credit":"debit";
     console.log("updateExpenditureSummary",deltaItem, operation, expenditureSummary,"amount--",deltaItem.amount,typeof(deltaItem.amount))
@@ -132,6 +174,26 @@ const updateExpenditureSummary = async (deltaItem, expenditureSummary,dateTimeKe
     res.monthlyExpenditure = await updateExpenditureItem("monthlyExpenditure",dateTimeKeys.monthlyKey,expenditureSummary,transType,amount)
     res.yearlyExpenditure = await updateExpenditureItem("yearlyExpenditure",dateTimeKeys.yearlyKey,expenditureSummary,transType,amount)
     dispatch({type: 'get', fetchedData: res})
+}
+
+const updateExpenditureSummary = async (deltaItem, expenditureSummary,dateTimeKeys, dispatch,operation) => {
+    const multiplier = operation==="remove"?-1:1;
+    var transType = deltaItem.isCredit?"credit":"debit";
+    
+    var amount = deltaItem.amount * multiplier
+
+    updateExpenditureItem("dailyExpenditure",dateTimeKeys.dateKey,expenditureSummary,transType,amount)
+    updateExpenditureItem("weeklyExpenditure",dateTimeKeys.weeklyKey,expenditureSummary,transType,amount)
+    updateExpenditureItem("monthlyExpenditure",dateTimeKeys.monthlyKey,expenditureSummary,transType,amount)
+    updateExpenditureItem("yearlyExpenditure",dateTimeKeys.yearlyKey,expenditureSummary,transType,amount)
+
+    console.log("expenditureSummary before",expenditureSummary)
+    expenditureSummary["dailyExpenditure"][transType] += amount
+    expenditureSummary["weeklyExpenditure"][transType] += amount
+    expenditureSummary["monthlyExpenditure"][transType] += amount
+    expenditureSummary["yearlyExpenditure"][transType] += amount
+
+    dispatch({type: 'get', fetchedData: expenditureSummary})
 }
 
 const getData = async (dateAsKey, dispatch, processData) => {
@@ -217,5 +279,6 @@ module.exports = {
     getFirestoreCollection,
     getFirestoreDoc,
     updateExpenditureSummary,
-    getExpenditureSummary
+    getExpenditureSummary,
+    log
 }

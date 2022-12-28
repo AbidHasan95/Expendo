@@ -1,8 +1,9 @@
 import React, { useState,useEffect, useReducer } from 'react';
+import {useNavigationState, useIsFocused} from '@react-navigation/native';
 import { View, Text, StyleSheet, Modal, Button, FlatList } from 'react-native';
 import ItemAddView from '../components/itemAddModal';
 import TransactionItemCard from '../components/TransactionItemCard'
-import {itemsReducer, getFirestoreCollection, getFirestoreDoc, getExpenditureSummary} from '../utils/tasksUtil';
+import {itemsReducer, getFirestoreCollection, getFirestoreDoc, getExpenditureSummary, log} from '../utils/tasksUtil';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from 'moment';
 import {getexpenditureKeys} from '../utils/calculateExpenditure'
@@ -47,6 +48,7 @@ const initialItems = [
     }
 ]
 const HomeScreen = (props) => {
+    log.debug("props-->",props.route)
     const [isModalVisible, setModalVisible] = useState(false);
     
     const [transactionItems, dispatch] = useReducer(itemsReducer, [])
@@ -153,15 +155,6 @@ const HomeScreen = (props) => {
         // console.log("A date has been picked: ", initialDateString, initialDateKey);
     };
 
-    // function getMonday(d) {
-    //     d = new Date(d);
-    //     var day = d.getDay(),
-    //     diff = d.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
-    //     d.setDate(diff); 
-    //     return d
-    // } 
-    
-
     // Loads everytime parameters defined inside [] changes
     useEffect(() => {
         console.log("-------------+++++useEffect 1 Triggered +++++----------------")
@@ -178,10 +171,10 @@ const HomeScreen = (props) => {
         }
 
         // getData("transactionCategories", dispatch2,processCategoriesData)
-        getFirestoreCollection("transactionCategories",dispatch2,processCategoriesData)
+        
         // console.log("transaction item----->>", transactionItems);
 
-    },[props.route.params]);
+    },[props.route.params.isDatePickerVisible, props.route.params.modalVisible]);
 
     // executes one-time on startup and never again
     useEffect(() => {
@@ -202,6 +195,21 @@ const HomeScreen = (props) => {
         // getData(initialDateKey, dispatch) // abid - using async storage
         getFirestoreDoc("dailyRecords",initialDateKey,dispatch,"itemsArray") // using Firebase/Firestore
     },[]);
+    // const state1 = useNavigationState(state => state.routes);
+    // console.log("useNavigationState-----",state1[1])
+    const isfocused = useIsFocused();
+    useEffect(() => {
+        if (isfocused) {
+            log.debug("Fetching transactionCategories-------------------------",isfocused)
+            console.log("Fetching.................", isfocused)
+            getFirestoreCollection("transactionCategories",dispatch2,processCategoriesData)
+        }
+        else {
+            log.debug("Notttt Fetching transactionCategories-------------------------",isfocused)
+            console.log("Notttt Fetching transactionCategories-------------------------",isfocused)
+        }
+    },[isfocused])
+    // },[state1[1]])
 
     return(
         <View style={styles.container}>

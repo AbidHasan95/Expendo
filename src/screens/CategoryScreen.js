@@ -3,38 +3,29 @@ import {useState, useEffect, useReducer, useRef} from 'react';
 import { View, FlatList, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
 import { Chip, Text, Modal, Portal, Provider, TextInput, Button } from 'react-native-paper';
 import { useForm, Controller } from "react-hook-form"; //  https://react-hook-form.com/
-import {itemsReducer, getData, getFirestoreDoc,getFirestoreCollection} from '../utils/tasksUtil';
+import {itemsReducer, getData, getFirestoreDoc,getFirestoreCollection, log} from '../utils/tasksUtil';
 import { Appbar } from 'react-native-paper';
 // https://www.stefanjudis.com/snippets/how-to-detect-emojis-in-javascript-strings/
 // const emojiRegex = /\p{Emoji}/u;
 // emojiRegex.test('⭐⭐'); // true
 // Update/re-render a single item in flatlist instead of the whole 
+// Emoji picker for react web - https://github.com/ealush/emoji-picker-react  https://www.npmjs.com/package/emoji-picker-react
 
-const MyFlatList = ({categoryList, renderItem}) => {
-  const [isolatedCategoryList, updateCategoryList2] = useState(categoryList)
-  useEffect(()=> {
-    updateCategoryList2(categoryList)
-  },[])
-  return (
-    <FlatList
-      data={categoryList}
-      renderItem={renderItem}
-      scrollEnabled={true}
-      keyExtractor={item => item.id}
-      contentContainerStyle={{ flex: 1,flexDirection: 'row', flexWrap: "wrap",padding: 5}}
-    />
-  )
-}
-
-const HomeAppbar = ({navigation, deleteCallback, testVar}) => {
+const HomeAppbar = ({route,navigation, deleteCallback, testVar}) => {
+  log.info("route=======",route)
+  // useEffect(()=> {
+  //   console.log("changedddddd")
+  // },[route.params.selectionChanged])
   return(
     <Appbar.Header>
       <Appbar.Content title="Add Category" />
-      {/* <Appbar.BackAction onPress={() => {}} /> */}
-      {/* <Appbar.Content title="Expendo1" /> */}
+      {/* <Appbar.Action icon="delete-outline" disabled={!testVar.current.length} onPress={() => { */}
       <Appbar.Action icon="delete-outline" onPress={() => {
-        deleteCallback(testVar.current)
-        testVar.current = []
+        if (testVar.current.length) {
+          deleteCallback(testVar.current)
+          testVar.current = []
+          navigation.setParams({"categoriesChangedTime": Date.now()})
+        }
       }} />
       <Appbar.Action icon="plus-circle" onPress={() => {
       }} />
@@ -42,13 +33,12 @@ const HomeAppbar = ({navigation, deleteCallback, testVar}) => {
     </Appbar.Header> );
 }
 
-const Item = ({ title, itemkey, testVar,selectedChips, setSelectedChips }) => {
+const Item = ({ title, itemkey, testVar,selectedChips, setSelectedChips,navigation }) => {
   const [counter, updateCounter] = useState(0)
   // const forceUpdate = updateComponent
   
   // let isSelected2 = selectedChips.includes(itemkey)
   let isSelected2 = testVar.current.includes(itemkey)
-  console.log("Item comp", title, itemkey, testVar.current)
   return (
     <View style={styles.item}>
       {/* <Text style={styles.title}>{title}</Text> */}
@@ -61,7 +51,7 @@ const Item = ({ title, itemkey, testVar,selectedChips, setSelectedChips }) => {
             selected={isSelected2} 
             showSelectedOverlay={true} 
             
-            onPress={()=> {
+            onPress={({navigation})=> {
               // dispatch({type: 'select', key: itemkey})
               // forceUpdate()
               
@@ -74,6 +64,7 @@ const Item = ({ title, itemkey, testVar,selectedChips, setSelectedChips }) => {
                 // setSelectedChips([...selectedChips,itemkey])
               }
               updateCounter(counter+1)
+              // navigation.setParams({"selectionChanged": Date.now()})
               // this.props.selected = true
             }} 
             onLongPress={() => {
@@ -97,9 +88,9 @@ const Item = ({ title, itemkey, testVar,selectedChips, setSelectedChips }) => {
     </View>)
 };
 
-const ExpenditureCategoryScreen = ({navigation}) => {
+const ExpenditureCategoryScreen = ({navigation,route, state}) => {
   // navigation.setOptions({ title: 'Updated!' })
-  console.log("-----------------------Rerender---------------------",Date.now())
+  log.info("-----------------------Rerender---------------------",Date.now(),route, navigation.getState(),state)
   const [categoryList, dispatch] = useReducer(itemsReducer, []);
   const [selectedChips,setSelectedChips] = useState([]);
   const testVar = useRef([]) 
@@ -115,13 +106,11 @@ const ExpenditureCategoryScreen = ({navigation}) => {
   }
   
   const renderItem = ({ item }) => {
-    console.log("item-->",item.id)
     let categoryContent = item.categoryText + " " + item.emojiLabel
     // let isSelected = item.isSelected == true
     let item_id = item.id
-    console.log("in renderr", item_id)
     return (
-      <Item title={categoryContent} itemkey={item_id} testVar={testVar} selectedChips={selectedChips} setSelectedChips={setSelectedChips}/>
+      <Item title={categoryContent} itemkey={item_id} testVar={testVar} selectedChips={selectedChips} setSelectedChips={setSelectedChips} navigation={navigation}/>
     )
   };
 
@@ -139,6 +128,7 @@ const ExpenditureCategoryScreen = ({navigation}) => {
     reset()
     let key = Math.round(Date.now()/1000)
     console.log("data---->",data, "emojiList",categoryList,key)
+    navigation.setParams({"categoriesChangedTime": Date.now()})
     // key1 = emojiList.length
     var newItem = {
       categoryText: data.categoryText, 
@@ -154,7 +144,7 @@ const ExpenditureCategoryScreen = ({navigation}) => {
     navigation.setOptions({ 
       title: 'Categories', 
       header: () => (
-        <HomeAppbar navigation={navigation} deleteCallback={deleteSelectedChips} testVar={testVar}/>
+        <HomeAppbar route={route} navigation={navigation} deleteCallback={deleteSelectedChips} testVar={testVar}/>
       ) 
     })
     // navigation.setOptions({ header: 'Updated!' })
@@ -186,7 +176,7 @@ const ExpenditureCategoryScreen = ({navigation}) => {
                       // maxLength: 1,
                     }}
                     render={({ field: { onChange, onBlur, value } }) => {
-                      console.log("Emojiii",value, value?.length)
+                      // console.log("Emojiii",value, value?.length)
                       return(
                         <View style={{marginBottom: 5}}>
                           <TextInput
@@ -232,7 +222,7 @@ const ExpenditureCategoryScreen = ({navigation}) => {
           
           <FlatList
               data={categoryList}
-              renderItem={renderItem}
+              renderItem={({item}) => renderItem({item,navigation})}
               scrollEnabled={true}
               keyExtractor={item => item.id}
               contentContainerStyle={{ flex: 1,flexDirection: 'row', flexWrap: "wrap",padding: 5}}
@@ -240,10 +230,10 @@ const ExpenditureCategoryScreen = ({navigation}) => {
           {/* <MyFlatList categoryList={categoryList}  renderItem={renderItem}/> */}
          {/* <View style={{flexDirection: "row", flexWrap:"wrap"}}>
              <View style={styles.chip}>
-                 <Chip icon="information" mode="flat" compact={true} onPress={() => console.log('Pressed')}>Example Chip</Chip>
+                 <Chip icon="information" mode="flat" compact={true} onPress={() => {}}>Example Chip</Chip>
              </View>
              <View style={styles.chip}>
-                 <Chip icon="information" mode="flat" compact={true} onPress={() => console.log('Pressed')}>Example Chips</Chip>
+                 <Chip icon="information" mode="flat" compact={true} onPress={() => {}}>Example Chips</Chip>
              </View>
          </View> */}
         </Provider>

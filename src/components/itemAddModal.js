@@ -4,7 +4,7 @@ import React from 'react';
 import {getDataCategories} from '../utils/tasksUtil';
 import { useForm, Controller } from "react-hook-form"; //  https://react-hook-form.com/
 import {useState} from 'react';
-import SelectDropdown from 'react-native-select-dropdown'; //  https://www.npmjs.com/package/react-native-select-dropdown 
+// import SelectDropdown from 'react-native-select-dropdown'; //  https://www.npmjs.com/package/react-native-select-dropdown 
 import { MultipleSelectList } from 'react-native-dropdown-select-list'; // https://github.com/danish1658/react-native-dropdown-select-list ; https://www.npmjs.com/package/react-native-dropdown-select-list 
 // import EmojiPicker from 'emoji-picker-react';  // https://www.npmjs.com/package/emoji-picker-react ; https://yarnpkg.com/package/emoji-picker-react
 // Menu from react native paper - https://stackoverflow.com/questions/61604500/how-do-i-pass-a-selected-item-from-react-native-paper-menu-to-input-textinput-on
@@ -19,7 +19,6 @@ const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,cat
   const { control, handleSubmit, formState: { errors }, reset  } = useForm({
     defaultValues: {
       title: 'Misc',
-      label: 'Misc',
       isCredit: false,
       category: [],
     }

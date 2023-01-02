@@ -1,6 +1,7 @@
 import React, { useState,useEffect, useReducer } from 'react';
 import {useNavigationState, useIsFocused} from '@react-navigation/native';
 import { View, Text, StyleSheet, Modal, Button, FlatList } from 'react-native';
+import { useTheme } from 'react-native-paper';
 import ItemAddView from '../components/itemAddModal';
 import TransactionItemCard from '../components/TransactionItemCard'
 import {itemsReducer, getFirestoreCollection, getFirestoreDoc, getExpenditureSummary, log} from '../utils/tasksUtil';
@@ -48,9 +49,9 @@ const initialItems = [
     }
 ]
 const HomeScreen = (props) => {
+    const theme = useTheme();
     log.debug("props-->",props.route)
     const [isModalVisible, setModalVisible] = useState(false);
-    
     const [transactionItems, dispatch] = useReducer(itemsReducer, [])
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [categoryList, dispatch2] = useReducer(itemsReducer, []); // x.map((i) => ({key:i.id, value: i.categoryText})) 
@@ -212,7 +213,7 @@ const HomeScreen = (props) => {
     // },[state1[1]])
 
     return(
-        <View style={styles.container}>
+        <View style={[styles.container,{backgroundColor: theme.colors.surface}]}>
             {/* <View style={styles.topSummaryBar}>
                 <View style={styles.topSummaryBarLeft}>
                     <Text> {pickedDate.dateString} </Text>
@@ -222,7 +223,7 @@ const HomeScreen = (props) => {
                     <Text style={styles.topBarSummaryAmount}>₹ 1,300</Text>
                 </View>
             </View> */}
-            <HomeSummaryBar pickedDate={pickedDate.dateString} expenditureSummary={expenditureSummary}/>
+            <HomeSummaryBar pickedDate={pickedDate.dateString} expenditureSummary={expenditureSummary} theme={theme}/>
             <View style={styles.centeredView}>
                 <ItemAddView 
                 isModalVisible={isModalVisible} 
@@ -233,18 +234,20 @@ const HomeScreen = (props) => {
                 itemAddCallback={dispatch} 
                 expenditureSummary={expenditureSummary}
                 expenditureSummaryDispatch={expenditureSummaryDispatch} 
+                theme={theme}
                 {...props}/>
             </View>
             <DateTimePickerModal
                 isVisible={isDatePickerVisible}
                 mode="date"
+                isDarkModeEnabled={true}
                 onConfirm={handleConfirm}
                 onCancel={hideDatePicker}
             />
             <FlatList 
                 data={transactionItems}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-                renderItem={({item}) => <TransactionItemCard dateAsKey={pickedDate.dateAsKey} transactionItemDeleteCallback={transactionItemDeleteCallback} collectionName="dailyRecords" dateTimeKeys={pickedDate.dateTimeKeys} docName={pickedDate.dateAsKey} dispatchCallback={dispatch} {...item}/>}
+                // ItemSeparatorComponent={() => <View style={styles.separator} />}
+                renderItem={({item}) => <TransactionItemCard dateAsKey={pickedDate.dateAsKey} transactionItemDeleteCallback={transactionItemDeleteCallback} collectionName="dailyRecords" dateTimeKeys={pickedDate.dateTimeKeys} docName={pickedDate.dateAsKey} dispatchCallback={dispatch} {...item} theme={theme}/>}
             />
 
         </View>

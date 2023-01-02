@@ -9,7 +9,7 @@ const HomeAppbar = (props) => {
   return(
     <Appbar.Header>
       {/* <Appbar.BackAction onPress={() => {}} /> */}
-      <Appbar.Content title="Expendo1" />
+      <Appbar.Content title="Expendo" />
       <Appbar.Action icon="calendar-outline" onPress={() => {
         console.log("calendar button pressed", Date.now())
         props.navigation.setParams({"isDatePickerVisible": true})

@@ -1,7 +1,7 @@
 import {useState, useEffect, useReducer, useRef} from 'react';
 // import * as React from 'react';
 import { View, FlatList, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
-import { Chip, Text, Modal, Portal, Provider, TextInput, Button } from 'react-native-paper';
+import { Chip, Text, Modal, Portal, Provider, TextInput, Button, useTheme } from 'react-native-paper';
 import { useForm, Controller } from "react-hook-form"; //  https://react-hook-form.com/
 import {itemsReducer, getData, getFirestoreDoc,getFirestoreCollection, log} from '../utils/tasksUtil';
 import { Appbar } from 'react-native-paper';
@@ -11,14 +11,14 @@ import { Appbar } from 'react-native-paper';
 // Update/re-render a single item in flatlist instead of the whole 
 // Emoji picker for react web - https://github.com/ealush/emoji-picker-react  https://www.npmjs.com/package/emoji-picker-react
 
-const HomeAppbar = ({route,navigation, deleteCallback, testVar}) => {
+const HomeAppbar = ({toggleModal,route,navigation, deleteCallback, testVar}) => {
   log.info("route=======",route)
   // useEffect(()=> {
   //   console.log("changedddddd")
   // },[route.params.selectionChanged])
   return(
     <Appbar.Header>
-      <Appbar.Content title="Add Category" />
+      <Appbar.Content title="Categories" />
       {/* <Appbar.Action icon="delete-outline" disabled={!testVar.current.length} onPress={() => { */}
       <Appbar.Action icon="delete-outline" onPress={() => {
         if (testVar.current.length) {
@@ -28,6 +28,7 @@ const HomeAppbar = ({route,navigation, deleteCallback, testVar}) => {
         }
       }} />
       <Appbar.Action icon="plus-circle" onPress={() => {
+        toggleModal()
       }} />
       <Appbar.Action icon="dots-vertical" onPress={() => {navigation.toggleDrawer()}}/>
     </Appbar.Header> );
@@ -45,7 +46,7 @@ const Item = ({ title, itemkey, testVar,selectedChips, setSelectedChips,navigati
       <View style={styles.chip}>
           {/* <Chip icon="information" mode="flat" compact={true} onPress={() => console.log('Pressed')}>Example Chipssss</Chip> */}
           <Chip 
-            icon={() => null} 
+            // icon={() => null} 
             mode="flat" 
             compact={true} 
             selected={isSelected2} 
@@ -89,6 +90,7 @@ const Item = ({ title, itemkey, testVar,selectedChips, setSelectedChips,navigati
 };
 
 const ExpenditureCategoryScreen = ({navigation,route, state}) => {
+  const theme = useTheme();
   // navigation.setOptions({ title: 'Updated!' })
   log.info("-----------------------Rerender---------------------",Date.now(),route, navigation.getState(),state)
   const [categoryList, dispatch] = useReducer(itemsReducer, []);
@@ -105,18 +107,19 @@ const ExpenditureCategoryScreen = ({navigation,route, state}) => {
     return () => updateCounter(counter => counter + 1)
   }
   
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item, theme }) => {
     let categoryContent = item.categoryText + " " + item.emojiLabel
     // let isSelected = item.isSelected == true
     let item_id = item.id
     return (
-      <Item title={categoryContent} itemkey={item_id} testVar={testVar} selectedChips={selectedChips} setSelectedChips={setSelectedChips} navigation={navigation}/>
+      <Item title={categoryContent} itemkey={item_id} testVar={testVar} selectedChips={selectedChips} setSelectedChips={setSelectedChips} navigation={navigation} theme={theme}/>
     )
   };
 
   const [visible, setVisible] = useState(false);
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
+  const toggleModal = () => setVisible((val)=> !val)
   const { control, handleSubmit, formState: { errors }, reset  } = useForm({
     defaultValues: {
       categoryText: '',
@@ -144,7 +147,7 @@ const ExpenditureCategoryScreen = ({navigation,route, state}) => {
     navigation.setOptions({ 
       title: 'Categories', 
       header: () => (
-        <HomeAppbar route={route} navigation={navigation} deleteCallback={deleteSelectedChips} testVar={testVar}/>
+        <HomeAppbar toggleModal={toggleModal} route={route} navigation={navigation} deleteCallback={deleteSelectedChips} testVar={testVar}/>
       ) 
     })
     // navigation.setOptions({ header: 'Updated!' })
@@ -155,16 +158,16 @@ const ExpenditureCategoryScreen = ({navigation,route, state}) => {
   },[])
 
   return (
-    <SafeAreaView style={styles.container}>
-        <Provider>
+    <SafeAreaView style={[styles.container,{backgroundColor: theme.colors.background}]}>
+        <Provider theme={theme}>
           {/* <Button onPress={() => navigation.goBack()} title="Go back home screen" /> */}
-          <View>
-            <Button icon="camera" mode="contained" onPress={() => navigation.goBack()}>Go back to home screen</Button>
-            <Button icon="camera" mode="outlined" onPress={showModal}>Add category</Button>
-          </View>
-          <Portal>
-            <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={styles.modalContainer}>
-              <View>
+          {/* <View style={{flexDirection: "row",justifyContent:"space-around"}}>
+            <Button mode="outlined" onPress={() => navigation.goBack()}>Home</Button>
+            <Button mode="outlined" onPress={toggleModal}>Add category</Button>
+          </View> */}
+          <Portal theme={theme}>
+            <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={[styles.modalContainer,{backgroundColor:theme.colors.secondaryContainer}]}>
+              
                 {/* <Text style={{marginBottom: 20}}>Add a transaction category.</Text> */}
                 <View style={{flexDirection: "column", justifyContent: "center"}}>
                   {/* https://github.com/callstack/react-native-paper/issues/2615 */}
@@ -191,7 +194,7 @@ const ExpenditureCategoryScreen = ({navigation,route, state}) => {
                     }}
                     name="emojiLabel"
                   />
-                  {errors.emojiLabel && <Text style={{color: "red"}}>Please provide a valid label</Text>}
+                  {errors.emojiLabel && <Text style={{color: theme.colors.error}}>Please provide a valid label</Text>}
                   <Controller
                     control={control}
                     rules={{
@@ -211,18 +214,18 @@ const ExpenditureCategoryScreen = ({navigation,route, state}) => {
                     )}
                     name="categoryText"
                   />
-                  {errors.categoryText && <Text style={{color: "red"}}>This is required</Text>}
+                  {errors.categoryText && <Text style={{color: theme.colors.error}}>This is required</Text>}
                   <View style={{ borderWidth: 0,paddingHorizontal:10,flexDirection:"row" ,justifyContent: "center", marginTop:5}}>
-                    <Button style={{padding: 2, borderRadius: 10}} mode="contained" onPress={handleSubmit(onSubmit)}>Submit</Button>
+                    <Button style={{padding: 2, borderRadius: 20}} mode="contained" onPress={handleSubmit(onSubmit)}>Submit</Button>
                   </View>
                 </View>
-              </View>
+              
             </Modal>
           </Portal>
           
           <FlatList
               data={categoryList}
-              renderItem={({item}) => renderItem({item,navigation})}
+              renderItem={({item}) => renderItem({item,navigation, theme})}
               scrollEnabled={true}
               keyExtractor={item => item.id}
               contentContainerStyle={{ flex: 1,flexDirection: 'row', flexWrap: "wrap",padding: 5}}
@@ -263,7 +266,7 @@ const styles = StyleSheet.create({
     // marginBottom: 5,
   },
   modalContainer: {
-    backgroundColor: 'white', 
+    // backgroundColor: 'white', 
     padding: 20,
     margin: 20,
     borderRadius: 20,

@@ -1,5 +1,5 @@
-import {Button, Modal, StyleSheet, Text, View, Switch} from 'react-native';
-import { Portal, Provider, TextInput } from 'react-native-paper';
+import {Modal, StyleSheet, View, Switch,TouchableWithoutFeedback, Keyboard} from 'react-native';
+import { Button,Portal, Provider,Text ,TextInput } from 'react-native-paper';
 import React from 'react';
 import {getDataCategories} from '../utils/tasksUtil';
 import { useForm, Controller } from "react-hook-form"; //  https://react-hook-form.com/
@@ -9,7 +9,7 @@ import { MultipleSelectList } from 'react-native-dropdown-select-list'; // https
 // import EmojiPicker from 'emoji-picker-react';  // https://www.npmjs.com/package/emoji-picker-react ; https://yarnpkg.com/package/emoji-picker-react
 // Menu from react native paper - https://stackoverflow.com/questions/61604500/how-do-i-pass-a-selected-item-from-react-native-paper-menu-to-input-textinput-on
 
-const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,categoryList, dateTimeKeys,itemAddCallback, expenditureSummary,expenditureSummaryDispatch}) => {
+const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,categoryList, dateTimeKeys,itemAddCallback, expenditureSummary,expenditureSummaryDispatch,theme}) => {
   // console.log("categoryList-->",categoryList);
   // var isDebit = true;
   // const [isDebit, setIsDebit] = useState(true);
@@ -77,7 +77,7 @@ const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,cat
         onRequestClose={() => {
             navigation.setParams({"modalVisible": false})
         }}>
-        <View style={styles.modalView}>
+        <View style={[styles.modalView,{backgroundColor:theme.colors.secondaryContainer}]}>
             <Text>This is a modal</Text>
             <Controller
               control={control}
@@ -99,6 +99,7 @@ const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,cat
                       // style={styles.textinput}
                       mode='outlined'
                       onBlur={onBlur}
+                      autoCorrect={false}
                       onChangeText={onChange}
                       value={value}
                       label="Transaction Description"
@@ -129,21 +130,25 @@ const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,cat
                       placeholder="0.0"
                       keyboardType='number-pad'
                     /> */}
-                    <TextInput
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      mode='outlined'
-                      value={value}
-                      placeholder="0"
-                      label="Enter amount"
-                      keyboardType='number-pad'
-                    />
+                      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                        <TextInput
+                          autoFocus={true}
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          mode='outlined'
+                          value={value}
+                          autoCorrect={false}
+                          placeholder="0"
+                          label="Enter amount"
+                          keyboardType='decimal-pad'
+                        />
+                      </TouchableWithoutFeedback>
                   </View>
                 </View>
               )}
               name="amount"
             />
-            {errors.amount && <Text>Amount is invalid.</Text>}
+            {errors.amount && <Text style={{color:theme.colors.error}}>*Amount is Required.</Text>}
             {/* <Controller
               control={control}
               rules={{
@@ -231,6 +236,14 @@ const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,cat
                           //   onChange(value)
 
                           // }}
+                          inputStyles={{color: theme.colors.onSurface}}
+                          badgeStyles={{backgroundColor:theme.colors.primary}}
+                          badgeTextStyles={{color:theme.colors.onPrimary}}
+                          // checkBoxStyles={{backgroundColor:"green"}}
+                          labelStyles={{color:theme.colors.onSurface}}
+                          boxStyles={{borderColor: theme.colors.outline,backgroundColor:theme.colors.background}}
+                          dropdownTextStyles={{color:theme.colors.onSurface}}
+                          dropdownStyles={{backgroundColor:theme.colors.background}}
                           setSelected={setSelectedCategories}
                           // setSelected={setMyCategory}
                           style={{borderRadius: 10}}
@@ -282,20 +295,27 @@ const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,cat
                 }}
                 name="isCredit"
             />
-            <View style={{flexDirection: "row"}}>
+            {/* <View style={{flexDirection: "row"}}>
               <View style={styles.customButton}>
-
-              <Button title="Submit" onPress={handleSubmit(onSubmit)} />
+              <Button mode='contained' onPress={handleSubmit(onSubmit)}>Submit</Button>
               </View>
-              <View style={styles.customButton}>
-                <Button title='Close' onPress={() => { 
+              <View style={styles.customButton} theme={theme}>
+                <Button mode="contained" theme={theme} onPress={() => { 
                     reset()
                     navigation.setParams({"modalVisible": false})
-                }}/>
+                }}>Close</Button>
               </View>
+            </View> */}
+            <View style={{flexDirection: "row",justifyContent:"space-around"}}>
+              <Button mode='contained' style={{padding:4,borderRadius:25,minWidth:100}} onPress={handleSubmit(onSubmit)}>Submit</Button>
+              <Button mode="contained" style={{padding:4,borderRadius:25,minWidth:100}} theme={theme} onPress={() => { 
+                    reset()
+                    navigation.setParams({"modalVisible": false})
+                }}>Close</Button>
             </View>
         </View>
       </Modal>
+      
   );
 }
 
@@ -335,10 +355,8 @@ const styles = StyleSheet.create({
   },
   customButton: {
     padding: 10,
-    borderRadius: 10,
     // margin:10,
     // borderWidth: 1,
-    flex: 1
   }
 });
 

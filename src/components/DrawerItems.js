@@ -12,7 +12,8 @@ import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useNavigation } from '@react-navigation/native';
 import { View,StyleSheet} from 'react-native';
 // import { PreferencesContext } from '../../App';
-import { PreferencesContext } from '../../App';
+// import { PreferencesContext } from '../../App';
+import { auth } from '../../config/firebase';
 
 const DrawerItemsData = [
     {
@@ -30,12 +31,16 @@ const DrawerItems = (props) => {
     const navigation = useNavigation();
     const theme = useTheme();
     // console.log("DrawerItems props==============+++++++++++++++++++++++++",props)
+    // console.log('firebase user details', auth.currentUser.uid ,auth.currentUser)
+    var user = auth.currentUser
+    var displayName = user!== null? user.displayName:""
     const [drawerItemIndex, setDrawerItemIndex] = React.useState(0);
     const _setDrawerItem = (index) => setDrawerItemIndex(index);
-    const preferences = React.useContext(PreferencesContext);
+    // const preferences = React.useContext(PreferencesContext);
     return(
         <DrawerContentScrollView style={{backgroundColor: theme.colors.background}}>
-            <Drawer.Section title="Example items" theme={theme}>
+            <Drawer.Item icon="account-outline" label={displayName}/>
+            <Drawer.Section theme={theme}>
                 {DrawerItemsData.map((props, index) => (
                 <Drawer.Item
                     {...props}
@@ -50,16 +55,23 @@ const DrawerItems = (props) => {
                 />
                 ))}
             </Drawer.Section>
-            <Drawer.Section title="Preferences">
+            <Drawer.Section title="Appearance">
                 <TouchableRipple onPress={props.toggleTheme}>
                     <View style={[styles.preference]}>
-                        <Text variant="labelLarge">Dark Theme</Text>
+                        <Text variant="labelLarge">Dark Mode</Text>
                         <View pointerEvents="none">
                         <Switch value={props.isDarkTheme} />
                         </View>
                     </View>
                 </TouchableRipple>
             </Drawer.Section>
+            <Drawer.Item 
+                icon="logout" 
+                label="Logout"
+                onPress={() => {
+                    auth.signOut()
+                    navigation.navigate("Login")
+                }} />
         </DrawerContentScrollView>
     );
   }

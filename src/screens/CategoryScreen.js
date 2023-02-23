@@ -3,8 +3,9 @@ import {useState, useEffect, useReducer, useRef} from 'react';
 import { View, FlatList, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
 import { Chip, Text, Modal, Portal, Provider, TextInput, Button, useTheme } from 'react-native-paper';
 import { useForm, Controller } from "react-hook-form"; //  https://react-hook-form.com/
-import {itemsReducer, getData, getFirestoreDoc,getFirestoreCollection, log} from '../utils/tasksUtil';
+import {itemsReducer, getData, getFirestoreDoc,getFirestoreCollection,getFirestoreData, log} from '../utils/tasksUtil';
 import { Appbar } from 'react-native-paper';
+import { auth, db } from '../../config/firebase';
 // https://www.stefanjudis.com/snippets/how-to-detect-emojis-in-javascript-strings/
 // const emojiRegex = /\p{Emoji}/u;
 // emojiRegex.test('⭐⭐'); // true
@@ -91,15 +92,21 @@ const Item = ({ title, itemkey, testVar,selectedChips, setSelectedChips,navigati
 
 const ExpenditureCategoryScreen = ({navigation,route, state}) => {
   const theme = useTheme();
+  const userId = auth.currentUser.uid
+  const pathRef = db.collection(userId).doc("transactionCategories")
   // navigation.setOptions({ title: 'Updated!' })
-  log.info("-----------------------Rerender---------------------",Date.now(),route, navigation.getState(),state)
+  // log.info("-----------------------Rerender---------------------",Date.now(),route, navigation.getState(),state)
   const [categoryList, dispatch] = useReducer(itemsReducer, []);
   const [selectedChips,setSelectedChips] = useState([]);
   const testVar = useRef([]) 
 
   const deleteSelectedChips = (selectedCategories) => {
     console.log("The selected chips->", selectedCategories)
-    dispatch({type: 'removeItems', collectionName: "transactionCategories",keysToRemove: selectedCategories, keyItentifier: 'id'})
+    let updatedItems = categoryList.filter((t)=> !selectedCategories.includes(t['id']))
+    updatedItems = {itemsArray: updatedItems}
+    console.log("After delete, updatedItems:",updatedItems, "categoryList:", categoryList)
+    // dispatch({type: 'newAdd',updatedItems,pathRef, propName: "itemsArray", collectionName: "transactionCategories"})
+    dispatch({type: 'removeItems',pathRef, collectionName: "transactionCategories",keysToRemove: selectedCategories, keyItentifier: 'id'})
   }
   function updateComponent() {
     const [counter, updateCounter] = useState(0)
@@ -130,6 +137,7 @@ const ExpenditureCategoryScreen = ({navigation,route, state}) => {
     hideModal()
     reset()
     let key = Math.round(Date.now()/1000)
+    key = `${key}`
     console.log("data---->",data, "emojiList",categoryList,key)
     navigation.setParams({"categoriesChangedTime": Date.now()})
     // key1 = emojiList.length
@@ -138,9 +146,15 @@ const ExpenditureCategoryScreen = ({navigation,route, state}) => {
       emojiLabel: data.emojiLabel, 
       id: key
     }
+    var updatedItems = {"itemsArray":[...categoryList,newItem]}
     // var updatedItems = [newItem, ...categoryList]
     // modifyEmojiList([...categoryList,{categoryText: data.categoryText, emojiLabel: data.emojiLabel, id: key}])
-    dispatch({type: 'newAdd', collectionName: "transactionCategories",docName: key,newItem: newItem})
+    // dispatch({type: 'newAdd', collectionName: "transactionCategories",docName: key,newItem: newItem})
+    
+    
+    console.log("updated categories",updatedItems)
+    dispatch({type: 'newAdd', docName: "transactionCategories",subCollectionName: key,"pathRef":pathRef,updatedItems: updatedItems,"propName":"itemsArray"})
+    
   }
 
   useEffect(() => {
@@ -152,7 +166,9 @@ const ExpenditureCategoryScreen = ({navigation,route, state}) => {
     })
     // navigation.setOptions({ header: 'Updated!' })
     // getData("transactionCategories", dispatch)
-    getFirestoreCollection("transactionCategories",dispatch)
+    // getFirestoreCollection("transactionCategories",dispatch)
+    
+    getFirestoreData(pathRef,dispatch,"itemsArray")
     // navigation.setParams({"transactionCategories": categoryList}) // will re-render the home screen
 
   },[])

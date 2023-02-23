@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';  // https://react-native-async-storage.github.io/async-storage/docs/api
 // TODO - Replace by react-native-mmkv-storage -> https://rnmmkv.vercel.app
-import {db} from '../../config/firebase';
+import {db, auth} from '../../config/firebase';
 import { logger,consoleTransport } from "react-native-logs"; //https://www.npmjs.com/package/react-native-logs
 
 
@@ -69,6 +69,33 @@ const setDataFirestore = async (collectionName, docName,itemObj) => {
     }
 }
 
+const addSubCollectionDataFirestore = async (docName, subCollectionName, subDocName, itemObj) => {
+    // try {
+        const collectionName= auth.currentUser.uid
+        console.log("in addSubColletionDataFirestore; collectionName:", collectionName, "docName",docName, "subCollectionName",subCollectionName, "subDocName->",subDocName,"itemObj-->", itemObj)
+        if (subDocName==undefined) {
+            const docRef = db.collection(collectionName).doc(`${docName}`).collection(subCollectionName);
+            docRef.add(itemObj)
+        }
+        else {
+            const docRef = db.collection(collectionName).doc(`${docName}`).collection(subCollectionName).doc(subDocName);
+            await docRef.set(itemObj);
+        }
+    // }
+    // catch (error) {
+    //    console.error("Error on add addSubCollectionDataFirestore") 
+    // }
+}
+
+const addDataToRef = async (pathRef, itemObj) => {
+    try {
+        await pathRef.set(itemObj)
+    }
+    catch (error) {
+        console.error("Error in addDataRef",error)
+    }
+}
+
 const getFirestoreCollection = async (collectionName,dispatch,processData) => {
     log.debug("Came in getFirestoreCollection", collectionName)
     const snapshot = await db.collection(collectionName).get();
@@ -95,7 +122,7 @@ const getFirestoreDoc = async (collectionName, docName,dispatch,propToFetch) => 
     if (!docRef.exists) {
         console.log('No such document!');
         fetchedData = []
-      } else {
+    } else {
         console.log('Document data:', docRef.data());
         fetchedData = docRef.data()
         if (propToFetch) {
@@ -105,8 +132,52 @@ const getFirestoreDoc = async (collectionName, docName,dispatch,propToFetch) => 
 
     console.log("fetched ->",collectionName, docName,fetchedData)
     dispatch({type: 'get', fetchedData: fetchedData})
+}
+
+const getFirestoreData = async(pathRef,dispatch,propToFetch) => {
+    var fetchedData
+    var data = await pathRef.get()
+    if (!data.exists) {
+        console.log('No such document!');
+        fetchedData = []
+    } else {
+        console.log('Document data:', data.data());
+        fetchedData = data.data()
+        if (propToFetch) {
+            fetchedData = fetchedData[propToFetch]?fetchedData[propToFetch]:[]
+        }
+    }
+    dispatch({type: 'get', fetchedData: fetchedData})
+}
+
+const getFirestoreSubDocItem = async (docName,subCollectionName,subDocName,dispatch,propToFetch) => {
+    console.log("go to be fetched2 ->",collectionName, docName,propToFetch)
+    const currUser = auth.currentUser
+    const collectionName = 'user-'+currUser.uid
+    var fetchedData= null;
+
+    const docRef = await db.collection(collectionName)
+        .doc(docName)
+        .collection(subCollectionName)
+        .doc(subDocName)
+        .get()
+        .then(snap => {
+            console.log(snap.data())
+            fetchedData = snap.data()
+        });
+    if (!fetchedData) {
+        console.log('No such document!');
+        fetchedData = []
+      } else {
+        console.log('Document data:',fetchedData);
+        
+    }
+
+    console.log("fetched ->",collectionName, docName,fetchedData)
+    dispatch({type: 'get', fetchedData: fetchedData})
 
 }
+
 
 const deleteDocumentsFirestore = async (collectionName,docNames) => {
     console.log("in deleteFirestore",docNames)
@@ -118,7 +189,8 @@ const deleteDocumentsFirestore = async (collectionName,docNames) => {
 }
 
 const getExpenditureItem = async (collectionName, docName) => {
-    const docRef = await db.collection(collectionName).doc(docName).get();
+    const userId = auth.currentUser.uid
+    const docRef = await db.collection(userId).doc(collectionName).collection(docName).doc("entry").get();
     var fetchedData = {
         credit: 0,
         debit: 0
@@ -139,7 +211,7 @@ const getExpenditureSummary = async (dispatch, dateTimeKeys) => {
     dispatch({type: 'get', fetchedData: res})
 }
 
-const updateExpenditureItem = async (collectionName, docName,expenditureSummary,transType,amount) => {
+const updateExpenditureItem_old2 = async (collectionName, docName,expenditureSummary,transType,amount) => {
     console.log("came in updateExpenditureItem--->",docName,amount, typeof(amount))
     const docRef = await db.collection(collectionName).doc(docName);
     const docRefGet = await db.collection(collectionName).doc(docName).get();
@@ -162,6 +234,19 @@ const updateExpenditureItem = async (collectionName, docName,expenditureSummary,
     return data
 }
 
+const updateExpenditureItem = async (collectionName, docName,expenditureSummary,transType,amount) => {
+    console.log("came in updateExpenditureItem--->",docName,expenditureSummary,amount, typeof(amount))
+    const userId = auth.currentUser.uid
+    const docRef = await db.collection(userId).doc(collectionName).collection(docName).doc('entry');
+        
+    console.log("data present===<<<", data)
+    var data = expenditureSummary[collectionName]
+    data[transType] += amount
+    console.log("new data===<<<", data)
+    await docRef.set(data)
+    // return data
+}
+
 const updateExpenditureSummary_old = async (deltaItem, expenditureSummary,dateTimeKeys, dispatch,operation) => {
     const multiplier = operation==="remove"?-1:1;
     var transType = deltaItem.isCredit?"credit":"debit";
@@ -181,11 +266,11 @@ const updateExpenditureSummary = async (deltaItem, expenditureSummary,dateTimeKe
     var transType = deltaItem.isCredit?"credit":"debit";
     
     var amount = deltaItem.amount * multiplier
-
-    updateExpenditureItem("dailyExpenditure",dateTimeKeys.dateKey,expenditureSummary,transType,amount)
-    updateExpenditureItem("weeklyExpenditure",dateTimeKeys.weeklyKey,expenditureSummary,transType,amount)
-    updateExpenditureItem("monthlyExpenditure",dateTimeKeys.monthlyKey,expenditureSummary,transType,amount)
-    updateExpenditureItem("yearlyExpenditure",dateTimeKeys.yearlyKey,expenditureSummary,transType,amount)
+    let expenditureSummary_copy = JSON.parse(JSON.stringify(expenditureSummary))
+    updateExpenditureItem("dailyExpenditure",dateTimeKeys.dateKey,expenditureSummary_copy,transType,amount)
+    updateExpenditureItem("weeklyExpenditure",dateTimeKeys.weeklyKey,expenditureSummary_copy,transType,amount)
+    updateExpenditureItem("monthlyExpenditure",dateTimeKeys.monthlyKey,expenditureSummary_copy,transType,amount)
+    updateExpenditureItem("yearlyExpenditure",dateTimeKeys.yearlyKey,expenditureSummary_copy,transType,amount)
 
     console.log("expenditureSummary before",expenditureSummary)
     expenditureSummary["dailyExpenditure"][transType] += amount
@@ -239,13 +324,15 @@ function itemsReducer (items,action) {
                 itemObj =  action.updatedItems
                 updatedItems = action.updatedItems
             }
-            setDataFirestore(collectionName=action.collectionName, docName=action.docName, itemObj=itemObj)
+            // setDataFirestore(collectionName=action.collectionName, docName=action.docName, itemObj=itemObj)
+            // addSubCollectionDataFirestore(docName=action.docName, subCollectionName=action.subCollectionName,subDocName=action.subDocumentName,itemObj=itemObj)             
+            addDataToRef(action.pathRef,itemObj)
             
             if (action.propName) {
                 console.log("with prop updatedItems", updatedItems)
                 updatedItems= updatedItems[action.propName]
             }
-            if (action.collectionName=="dailyRecords") {
+            if (action.docName=="dailyRecords") {
                 console.log("-------->>updating dailyRecords", Date.now())
 
                 updateExpenditureSummary(action.deltaItem, action.expenditureSummary, action.dateTimeKeys, action.expenditureSummaryDispatch,action.operation)
@@ -254,11 +341,10 @@ function itemsReducer (items,action) {
         } 
 
         case 'removeItems': { //Remove items corresponding to a outer key
-            // let keyItentifier = action.keyIdentifier
             console.log("Came to remove items", action.keysToRemove, action.collectionName)
             let updatedItems = items.filter((t)=> !action.keysToRemove.includes(t[action.keyItentifier]))
-            // setData(updatedItems,action.dateAsKey)
-            deleteDocumentsFirestore(action.collectionName, action.keysToRemove)
+            updatedItemsFirestore = {itemsArray: updatedItems}
+            addDataToRef(action.pathRef,updatedItemsFirestore)
             return updatedItems
         }
 
@@ -280,5 +366,6 @@ module.exports = {
     getFirestoreDoc,
     updateExpenditureSummary,
     getExpenditureSummary,
-    log
+    log,
+    getFirestoreData,
 }

@@ -6,6 +6,7 @@ import { useForm, Controller } from "react-hook-form"; //  https://react-hook-fo
 import {useState} from 'react';
 // import SelectDropdown from 'react-native-select-dropdown'; //  https://www.npmjs.com/package/react-native-select-dropdown 
 import { MultipleSelectList } from 'react-native-dropdown-select-list'; // https://github.com/danish1658/react-native-dropdown-select-list ; https://www.npmjs.com/package/react-native-dropdown-select-list 
+import { db,auth } from '../../config/firebase';
 // import EmojiPicker from 'emoji-picker-react';  // https://www.npmjs.com/package/emoji-picker-react ; https://yarnpkg.com/package/emoji-picker-react
 // Menu from react native paper - https://stackoverflow.com/questions/61604500/how-do-i-pass-a-selected-item-from-react-native-paper-menu-to-input-textinput-on
 
@@ -23,12 +24,13 @@ const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,cat
       category: [],
     }
   });
+  var categoryListProcessed = categoryList.map((i) => ({key:i.id, value: i.categoryText, emojiLabel:i.emojiLabel}))
   const [selectedCategories, setSelectedCategories] = React.useState([]);
   const onSubmit = data => {
     console.log("data---->-",data,"selectedCategories",selectedCategories)
-    console.log("categories List",categoryList) // [{"emojiLabel": "👕", "key": "1672049184", "value": "Clothing"}, {"emojiLabel": "🍿", "key": "1672049225", "value": "Entertainment"}, {"emojiLabel": "🛍️", "key": "1672049236", "value": "Grocery"}, {"emojiLabel": "🍛", "key": "1672049266", "value": "Food"}, {"emojiLabel": "🛒", "key": "1672049303", "value": "Home essentials"}, {"emojiLabel": "🚗", "key": "1672049335", "value": "Travel"}, {"emojiLabel": "🎁", "key": "1672052107", "value": "Gift"}]
-    var labels = categoryList.filter((i)=> selectedCategories.includes(i.key)).map((t)=> t.emojiLabel)
-    var categories = categoryList.filter((i)=> selectedCategories.includes(i.key)).map((t)=> t.value)
+    console.log("categories List",categoryListProcessed) // [{"emojiLabel": "👕", "key": "1672049184", "value": "Clothing"}, {"emojiLabel": "🍿", "key": "1672049225", "value": "Entertainment"}, {"emojiLabel": "🛍️", "key": "1672049236", "value": "Grocery"}, {"emojiLabel": "🍛", "key": "1672049266", "value": "Food"}, {"emojiLabel": "🛒", "key": "1672049303", "value": "Home essentials"}, {"emojiLabel": "🚗", "key": "1672049335", "value": "Travel"}, {"emojiLabel": "🎁", "key": "1672052107", "value": "Gift"}]
+    var labels = categoryListProcessed.filter((i)=> selectedCategories.includes(i.key)).map((t)=> t.emojiLabel)
+    var categories = categoryListProcessed.filter((i)=> selectedCategories.includes(i.key)).map((t)=> t.value)
     console.log("emojis", labels)
     // data.category((val) => {
     //   console.log("val")
@@ -48,19 +50,24 @@ const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,cat
       addTime: key,
       isCredit: data.isCredit  // true - false
     }
-    var updatedItems = {itemsArray: [deltaItem,...transactionItems]}
+    var updatedItems = {'itemsArray':[deltaItem,...transactionItems]}
     const operation = "add"
     // itemAddCallback({type: 'add', key: Date.now(), dateAsKey: dateAsKey,...data}); old
+    const userId = auth.currentUser.uid
+    const pathRef = db.collection(userId).doc("dailyRecords").collection(dateAsKey).doc('entries')
     itemAddCallback({
       type: 'newAdd', 
-      collectionName: "dailyRecords", 
-      docName: dateAsKey,
+      docName: "dailyRecords", 
+      subCollectionName: dateAsKey,
+      subDocumentName: "records",
       updatedItems: updatedItems, 
       dateTimeKeys,
       deltaItem,
       propName: "itemsArray",
       expenditureSummaryDispatch,
       expenditureSummary,
+      userId,
+      pathRef,
       operation
     }); // new
     
@@ -227,7 +234,7 @@ const ItemAddView = ({navigation, isModalVisible,transactionItems, dateAsKey,cat
                           //   {value: "Clothing", key: 1670905629}, {value: "Food", key: 1670905718}, {value: "Entertainment", key: 1670905757}, {value: "Travel", key: 1670905999}, {value: "Grocery", key: 1670906132}, {value: "Snacks", key: 1670906173}
                           //   {key:1,value:"Food"}, {key:2,value:"Entertainment"}, {key:3,value:"Snacks"},{key:4,value:"Home Essentials"},{key:5,value:"Groceries"}, {key:6,value:"Travel"}, {key:7,value:"Other"}
                           // ]} 
-                          data={categoryList}
+                          data={categoryListProcessed}
                           // setSelected={(val) => {
                           //   // setSelected(val)
                           //   // let val2 = Array(val)

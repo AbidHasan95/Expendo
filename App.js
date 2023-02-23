@@ -3,21 +3,24 @@ import {
   GestureHandlerRootView,
   RectButton,
 } from 'react-native-gesture-handler';
-import { Provider as PaperProvider, MD3DarkTheme, MD3LightTheme,useTheme } from 'react-native-paper';
+import { Provider as PaperProvider, MD3DarkTheme, MD3LightTheme,useTheme, Text, TextInput,Button } from 'react-native-paper';
 import { createNativeStackNavigator } from'@react-navigation/native-stack';
 import HomeScreen from './src/screens/HomeScreen';
+import LoginScreen from './src/screens/LoginScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import HomeAppbar from './src/components/HomeAppbar';
 import { StyleSheet, useColorScheme} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { View, Button } from 'react-native';
+import { View } from 'react-native';
 import ExpenditureCategoryScreen from './src/screens/CategoryScreen';
 
 import { LogBox } from 'react-native';
 LogBox.ignoreLogs(['flexWrap']); // Ignore log notification by message
 import DrawerItems from './src/components/DrawerItems';
+import { auth } from './config/firebase';
+import { onAuthStateChanged, sendPasswordResetEmail} from 'firebase/auth';
 
 const Stack = createNativeStackNavigator();
 export const PreferencesContext = React.createContext(null)
@@ -129,48 +132,122 @@ function NotificationsScreen({ navigation }) {
   );
 }
 
-function Home() {
-  
+const SplashScreen = ({navigation}) => {
+  onAuthStateChanged(auth, (user)=> {
+    if (user) {
+        const uid = user.uid
+        const email = user.email
+        const displayName = user.displayName
+        // currUser = auth.currentUser
+        initialRouteScreen = 'Home'
+        console.log("loggged in->>>",uid, email,displayName)
+        navigation.navigate('Home')
+        // console.log("loggged in2->>>",currUser.uid, currUser.email,currUser.displayName)
+        // navigation.navigate("Home")
+    }
+    else {
+        console.log("Logged out-------")
+        navigation.navigate('Login')
+    }
+    
+  })
   return (
-      <Drawer.Navigator
-        // headerMode='screen'
-        drawerContent={() => <DrawerContent />}
-        >
-        <Drawer.Screen 
-          name="Home" 
-          component={HomeScreen} 
-          initialParams={{
-            modalVisible: false,
-          }}
-          options={{
-            header: (props) => (
-              <HomeAppbar {...props}/>
-            ),
-            drawerStyle: {
-              // backgroundColor: '#c6cbef',
-              width: 200,
-            },
-            drawerPosition :'right',
-            drawerType: 'front',
-            swipeEnabled: false
-          }}
-        />
-        <Drawer.Screen
-          name="Add categories"
-          component={ExpenditureCategoryScreen}
-          options={{
-            drawerStyle: {
-              // backgroundColor: '#c6cbef',
-              width: 200,
-            },
-            drawerPosition :'right',
-            drawerType: 'front',
-            swipeEnabled: false
-          }}
-        /> 
-      </Drawer.Navigator>
+    <View>
+      <Text>Waiting...</Text>
+    </View>
   )
 }
+
+const ResetPasswordScreen = ({navigation}) => {
+  const [userDetails, setUserDetails] = React.useState({
+    email:"",
+    status:"",
+    error:"",
+    success: false
+  })
+  return(
+    <View style={{flexDirection:"column", justifyContent:"center", alignItems:"center",height:"100%"}}>
+      {!!userDetails.success && <View><Text>Reset Sucess for {userDetails.email}</Text></View>}
+      <View style={{flexDirection:"row"}}>
+        <TextInput
+            label="Email"
+            mode="outlined"
+            value={userDetails.email}
+            right={<TextInput.Icon icon="email"/>}
+            onChangeText={(text)=> {
+              setUserDetails({...userDetails,email: text})
+              if (userDetails.success) {
+                setUserDetails({...userDetails, success: false})
+              }
+            }}
+            style={{width:"70%"}}
+        />
+        <View style={{marginHorizontal:5, justifyContent:"center"}}>
+          <Button mode="contained" disabled={!!userDetails.success} onPress={()=> {
+            console.log("sending password reset for",userDetails.email)
+            sendPasswordResetEmail(auth,userDetails.email).then(() => {
+              setUserDetails({...userDetails,success:true})
+              console.log("!!! Password Reset email sent !!!")
+            })
+          }}>Reset</Button>
+        </View>
+      </View>
+      <Button mode="contained" onPress={() => {
+        navigation.navigate("Login")
+      }}>Back</Button>
+    </View>
+  )
+}
+
+// function Home() {
+  
+//   return (
+//       <Drawer.Navigator
+//         // headerMode='screen'
+//         drawerContent={() => <DrawerContent />}
+//         >
+//         <Drawer.Screen 
+//           name="Login" 
+//           component={LoginScreen} 
+//           initialParams={{
+//             modalVisible: false,
+//           }}
+//         />
+//         <Drawer.Screen 
+//           name="Home" 
+//           component={HomeScreen} 
+//           initialParams={{
+//             modalVisible: false,
+//           }}
+//           options={{
+//             header: (props) => (
+//               <HomeAppbar {...props}/>
+//             ),
+//             drawerStyle: {
+//               // backgroundColor: '#c6cbef',
+//               width: 200,
+//             },
+//             drawerPosition :'right',
+//             drawerType: 'front',
+//             swipeEnabled: false
+//           }}
+//         />
+//         <Drawer.Screen
+//           name="Add categories"
+//           component={ExpenditureCategoryScreen}
+//           options={{
+//             drawerStyle: {
+//               // backgroundColor: '#c6cbef',
+//               width: 200,
+//             },
+//             drawerPosition :'right',
+//             drawerType: 'front',
+//             swipeEnabled: false
+//           }}
+//         /> 
+//       </Drawer.Navigator>
+//   )
+// }
 
 const Drawer = createDrawerNavigator();
 export default function App() {
@@ -197,7 +274,7 @@ export default function App() {
           console.log("old val",isDarkMode,!oldValue)
           return !oldValue
         })
-        console.log("new vallllllllllll",isDarkMode)
+        console.log("Dark mode value changed",isDarkMode)
       },
       theme,
     }),
@@ -210,6 +287,8 @@ export default function App() {
           <NavigationContainer>
             <Drawer.Navigator
               // headerMode='screen'
+              // initialRouteName='Login'
+              initialRouteName='SplashScreen'
               drawerContent={() => <DrawerContent />}
               >
               <Drawer.Screen 
@@ -230,6 +309,28 @@ export default function App() {
                   drawerType: 'front',
                   swipeEnabled: false
                 }}
+              />
+              <Drawer.Screen 
+                name="Login" 
+                component={LoginScreen} 
+                initialParams={{
+                  modalVisible: false,
+                }}
+                options={{
+                  swipeEnabled: false,
+                  headerShown: false
+                }}
+              />
+              <Drawer.Screen
+                name="PasswordReset"
+                component={ResetPasswordScreen}
+                options={{
+                  headerShown:false
+                }}
+              />
+              <Drawer.Screen
+                name="SplashScreen"
+                component={SplashScreen}
               />
               <Drawer.Screen
                 name="Categories"

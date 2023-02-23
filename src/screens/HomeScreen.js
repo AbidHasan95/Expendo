@@ -4,11 +4,12 @@ import { View, Text, StyleSheet, Modal, Button, FlatList } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import ItemAddView from '../components/itemAddModal';
 import TransactionItemCard from '../components/TransactionItemCard'
-import {itemsReducer, getFirestoreCollection, getFirestoreDoc, getExpenditureSummary, log} from '../utils/tasksUtil';
+import {itemsReducer, getFirestoreCollection, getFirestoreDoc, getExpenditureSummary,getFirestoreData, log} from '../utils/tasksUtil';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from 'moment';
 import {getexpenditureKeys} from '../utils/calculateExpenditure'
 import HomeSummaryBar from '../components/HomeSummaryBar';
+import { auth, db } from '../../config/firebase';
 
 /*
 Y/YYYY -> Year
@@ -51,10 +52,13 @@ const initialItems = [
 const HomeScreen = (props) => {
     const theme = useTheme();
     log.debug("props-->",props.route)
+    console.log("user details", auth.currentUser)
     const [isModalVisible, setModalVisible] = useState(false);
     const [transactionItems, dispatch] = useReducer(itemsReducer, [])
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [categoryList, dispatch2] = useReducer(itemsReducer, []); // x.map((i) => ({key:i.id, value: i.categoryText})) 
+    const userId = auth.currentUser.uid
+    const categoriesRef = db.collection(userId).doc("transactionCategories")
     const [expenditureSummary, expenditureSummaryDispatch] = useReducer(itemsReducer,{
         dailyExpenditure: {credit: 0, debit: 0},
         weeklyExpenditure: {credit: 0, debit: 0},
@@ -74,16 +78,20 @@ const HomeScreen = (props) => {
         var updatedItems = transactionItems.filter((item) => item.key!=itemKey)
         updatedItems = {itemsArray: updatedItems}
         // var dateTimeKeys = getexpenditureKeys(currDate,pickedDateKey)
+        const userId = auth.currentUser.uid
+        const pathRef = db.collection(userId).doc("dailyRecords").collection(docName).doc('entries')
         dispatch({
             type: 'newAdd', 
-            collectionName: "dailyRecords", 
-            docName: docName,
+            docName: "dailyRecords", 
+            subCollectionName: docName,
+            subDocumentName: "records",
             updatedItems: updatedItems, 
             dateTimeKeys:pickedDate.dateTimeKeys,
             deltaItem,
             propName: "itemsArray",
             expenditureSummary,
             expenditureSummaryDispatch,
+            pathRef,
             operation
         });
     }
@@ -151,7 +159,11 @@ const HomeScreen = (props) => {
         // dispatch({type: 'get', dateAsKey: pickedDateKey}) // abid
         // getSelectedWeekDays(date)
         // getData(pickedDateKey, dispatch) // using asyncstorage  
-        getFirestoreDoc("dailyRecords",pickedDateKey,dispatch,"itemsArray") // using Firebase/firestore
+
+
+        // getFirestoreDoc("dailyRecords",pickedDateKey,dispatch,"itemsArray") // using Firebase/firestore
+        const dailyRecordsRef = db.collection(userId).doc('dailyRecords').collection(pickedDateKey).doc('entries') 
+        getFirestoreData(dailyRecordsRef,dispatch,'itemsArray')
         getExpenditureSummary(expenditureSummaryDispatch, dateTimeKeys)
         // console.log("A date has been picked: ", initialDateString, initialDateKey);
     };
@@ -194,7 +206,11 @@ const HomeScreen = (props) => {
         console.log("going to getData")
         getExpenditureSummary(expenditureSummaryDispatch, dateTimeKeys)
         // getData(initialDateKey, dispatch) // abid - using async storage
-        getFirestoreDoc("dailyRecords",initialDateKey,dispatch,"itemsArray") // using Firebase/Firestore
+
+
+        // getFirestoreDoc("dailyRecords",initialDateKey,dispatch,"itemsArray") // using Firebase/Firestore
+        const dailyRecordsRef = db.collection(userId).doc('dailyRecords').collection(initialDateKey).doc('entries') 
+        getFirestoreData(dailyRecordsRef,dispatch,'itemsArray')
     },[]);
     // const state1 = useNavigationState(state => state.routes);
     // console.log("useNavigationState-----",state1[1])
@@ -203,7 +219,8 @@ const HomeScreen = (props) => {
         if (isfocused) {
             log.debug("Fetching transactionCategories-------------------------",isfocused)
             console.log("Fetching.................", isfocused)
-            getFirestoreCollection("transactionCategories",dispatch2,processCategoriesData)
+            // getFirestoreCollection("transactionCategories",dispatch2,processCategoriesData)
+            getFirestoreData(categoriesRef,dispatch2,"itemsArray")
         }
         else {
             log.debug("Notttt Fetching transactionCategories-------------------------",isfocused)
@@ -214,15 +231,7 @@ const HomeScreen = (props) => {
 
     return(
         <View style={[styles.container,{backgroundColor: theme.colors.surface}]}>
-            {/* <View style={styles.topSummaryBar}>
-                <View style={styles.topSummaryBarLeft}>
-                    <Text> {pickedDate.dateString} </Text>
-                </View>
-                <View style={styles.topSummaryBarRight}>
-                    <Text style={styles.topBarSummaryAmount}>₹ 300</Text>
-                    <Text style={styles.topBarSummaryAmount}>₹ 1,300</Text>
-                </View>
-            </View> */}
+            
             <HomeSummaryBar pickedDate={pickedDate.dateString} expenditureSummary={expenditureSummary} theme={theme}/>
             <View style={styles.centeredView}>
                 <ItemAddView 
@@ -247,7 +256,7 @@ const HomeScreen = (props) => {
             <FlatList 
                 data={transactionItems}
                 // ItemSeparatorComponent={() => <View style={styles.separator} />}
-                renderItem={({item}) => <TransactionItemCard dateAsKey={pickedDate.dateAsKey} transactionItemDeleteCallback={transactionItemDeleteCallback} collectionName="dailyRecords" dateTimeKeys={pickedDate.dateTimeKeys} docName={pickedDate.dateAsKey} dispatchCallback={dispatch} {...item} theme={theme}/>}
+                renderItem={({item}) => <TransactionItemCard dateAsKey={pickedDate.dateAsKey} transactionItemDeleteCallback={transactionItemDeleteCallback} collectionName="dailyRecords" navigation={props.navigation} dateTimeKeys={pickedDate.dateTimeKeys} docName={pickedDate.dateAsKey} dispatchCallback={dispatch} {...item} theme={theme}/>}
             />
 
         </View>

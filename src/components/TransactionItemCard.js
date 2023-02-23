@@ -11,10 +11,10 @@ const TransactionItemCard = (props) => {
     const theme = props.theme
     return (
       <AppleStyleSwipeableRow dispatchCallback={props.dispatchCallback} dateAsKey={props.dateAsKey} itemKey={props.addTime} dateTimeKeys={props.dateTimeKeys} docName={props.docName} transactionItemDeleteCallback={props.transactionItemDeleteCallback}>
-        <Card style={{marginHorizontal:5,marginVertical:2}}>
+        <Card style={{marginHorizontal:0,marginVertical:0}} onPress={() => props.navigation.setParams({"modalVisible": true})}>
           <Card.Content style={{padding:0,borderColor:"black",borderWidth:0,margin:0}}>
 
-          <RectButton style={[styles.rectButton, {backgroundColor: "transparent", color:theme.colors.onSecondaryContainer}]} onPress={() => window.alert("test1")}>
+          {/* <RectButton style={[styles.rectButton, {backgroundColor: "transparent", color:theme.colors.onSecondaryContainer}]}>  */}
             {/* <Text style={[styles.fromText,{color: theme.colors.onSecondaryContainer}]}>{props.title}</Text>
             <Text numberOfLines={1} style={styles.messageText}>
             {props.emojiLabels}
@@ -29,7 +29,7 @@ const TransactionItemCard = (props) => {
                     <Text style={{fontSize:16}}>{props.amount}</Text>
                 </View>
            </View>
-          </RectButton> 
+          {/* </RectButton>  */}
           </Card.Content>
 
         </Card>  
@@ -50,21 +50,18 @@ const TransactionItemCard = (props) => {
 const styles = StyleSheet.create({
     mycard: {
         // position: "absolute",
-        width: "auto",
-        height:"auto",
+        // width: "auto",
+        // height:"auto",
         // borderWidth: 2,
         // borderRadius: 5,
-        shadowColor: "rgb(0,0,0)",
-        shadowOffset: {
-            width: 0,
-            height: 10
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        backgroundColor: "rgb(0,0,0,0.5)",
-        // padding: 5,
-        // marginTop: 5,
-        // marginHorizontal: 5,
+        // shadowColor: "rgb(0,0,0)",
+        // shadowOffset: {
+        //     width: 0,
+        //     height: 10
+        // },
+        // shadowOpacity: 0.25,
+        // shadowRadius: 4,
+        // backgroundColor: "rgb(0,0,0,0.5)",
         display: "flex",
         flexDirection: "row",
         alignItems: "center",

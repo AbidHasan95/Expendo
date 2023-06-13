@@ -43,7 +43,8 @@ export default class AppleStyleSwipeableRow extends Component {
         // eslint-disable-next-line no-alert
         if (text=='Delete') {
           // console.log("Delete props==>",this.props)
-          this.props.dispatchCallback({type: 'remove', dateAsKey: this.props.dateAsKey, itemKey: this.props.itemKey})
+          this.props.transactionItemDeleteCallback(this.props.docName, this.props.itemKey)
+          // this.props.dispatchCallback({type: 'remove', dateAsKey: this.props.dateAsKey, itemKey: this.props.itemKey})
         }
         // window.alert(text);
       };
@@ -65,7 +66,8 @@ export default class AppleStyleSwipeableRow extends Component {
     ) => (
       <View
         style={{
-          width: 192,
+          width: 155,
+          marginLeft:4,
           flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row',
         }}>
         {/* {this.renderRightAction('More', '#C8C7CD', 192, progress)} */}
@@ -87,22 +89,25 @@ export default class AppleStyleSwipeableRow extends Component {
       
       // dispatch({type: 'get', fetchedData: fetchedData})
       return (
-        <Swipeable
-          ref={this.updateRef}
-          friction={2}
-          enableTrackpadTwoFingerGesture
-          leftThreshold={30}
-          rightThreshold={40}
-          renderLeftActions={this.renderLeftActions}
-          renderRightActions={this.renderRightActions}
-          onSwipeableOpen={(direction) => {
-            console.log(`Opening swipeable from the ${direction}`);
-          }}
-          onSwipeableClose={(direction) => {
-            console.log(`Closing swipeable to the ${direction}`);
-          }}>
-          {children}
-        </Swipeable>
+        <View style={{padding:2,marginHorizontal:5}}>
+          <Swipeable
+            ref={this.updateRef}
+            friction={2}
+            enableTrackpadTwoFingerGesture
+            leftThreshold={30}
+            rightThreshold={40}
+            renderLeftActions={this.renderLeftActions}
+            // style={{borderWidth:20}}
+            renderRightActions={this.renderRightActions}
+            onSwipeableOpen={(direction) => {
+              console.log(`Opening swipeable from the ${direction}`);
+            }}
+            onSwipeableClose={(direction) => {
+              console.log(`Closing swipeable to the ${direction}`);
+            }}>
+            {children}
+          </Swipeable>
+        </View>
       );
     }
 }

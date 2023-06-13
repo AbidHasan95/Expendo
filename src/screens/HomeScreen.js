@@ -1,10 +1,15 @@
 import React, { useState,useEffect, useReducer } from 'react';
+import {useNavigationState, useIsFocused} from '@react-navigation/native';
 import { View, Text, StyleSheet, Modal, Button, FlatList } from 'react-native';
+import { useTheme } from 'react-native-paper';
 import ItemAddView from '../components/itemAddModal';
 import TransactionItemCard from '../components/TransactionItemCard'
-import {itemsReducer, getData} from '../utils/tasksUtil';
+import {itemsReducer, getFirestoreCollection, getFirestoreDoc, getExpenditureSummary,getFirestoreData, log} from '../utils/tasksUtil';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from 'moment';
+import {getexpenditureKeys} from '../utils/calculateExpenditure'
+import HomeSummaryBar from '../components/HomeSummaryBar';
+import { auth, db } from '../../config/firebase';
 
 /*
 Y/YYYY -> Year
@@ -45,49 +50,122 @@ const initialItems = [
     }
 ]
 const HomeScreen = (props) => {
+    const theme = useTheme();
+    log.debug("props-->",props.route)
+    console.log("user details", auth.currentUser)
     const [isModalVisible, setModalVisible] = useState(false);
-    
     const [transactionItems, dispatch] = useReducer(itemsReducer, [])
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [categoryList, dispatch2] = useReducer(itemsReducer, []); // x.map((i) => ({key:i.id, value: i.categoryText})) 
+    const userId = auth.currentUser.uid
+    const categoriesRef = db.collection(userId).doc("transactionCategories")
+    const [expenditureSummary, expenditureSummaryDispatch] = useReducer(itemsReducer,{
+        dailyExpenditure: {credit: 0, debit: 0},
+        weeklyExpenditure: {credit: 0, debit: 0},
+        monthlyExpenditure: {credit: 0, debit: 0},
+        yearlyExpenditure: {credit: 0, debit: 0},
+
+    })
     const [pickedDate, setPickedDate] = useState({
         dateString:'',
         dateAsKey: '',
+        dateTimeKeys: '',
     })
 
+    const transactionItemDeleteCallback = (docName, itemKey) => {
+        var deltaItem = transactionItems.filter((t) => t.key === itemKey)[0]
+        const operation = "remove"
+        var updatedItems = transactionItems.filter((item) => item.key!=itemKey)
+        updatedItems = {itemsArray: updatedItems}
+        // var dateTimeKeys = getexpenditureKeys(currDate,pickedDateKey)
+        const userId = auth.currentUser.uid
+        const pathRef = db.collection(userId).doc("dailyRecords").collection(docName).doc('entries')
+        dispatch({
+            type: 'newAdd', 
+            docName: "dailyRecords", 
+            subCollectionName: docName,
+            subDocumentName: "records",
+            updatedItems: updatedItems, 
+            dateTimeKeys:pickedDate.dateTimeKeys,
+            deltaItem,
+            propName: "itemsArray",
+            expenditureSummary,
+            expenditureSummaryDispatch,
+            pathRef,
+            operation
+        });
+    }
 
     const processCategoriesData = (data) =>  {
         data = data.map((i) => ({key:i.id, value: i.categoryText, emojiLabel:i.emojiLabel}))
         return data
     }
-    
+    const getWeekNum = (day2) => {
+        const day1 = new Date(2000,0,2) // First Sunday of 2000
+        var days = Math.floor((day2 - day1) / (24*60*60*1000));
+        var weeknum1 = Math.ceil(days/7);
+        return weeknum1
+    }
+    function getSelectedWeekDays(d) {
+        d = new Date(d);
+        var weekNum = getWeekNum(d)
+        var day = d.getDay()
+        diff = d.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
+        var mon = new Date(d.setDate(diff)); 
+        diff = d.getDate() + 6
+        var sun = new Date(d.setDate(diff))
+        var offset = 24*60*60*1000 
+        var days = []
+        for (let i=0;i<7;i++) {
+            let temp = new Date(mon.getTime() + offset*i)
+            var day1 = temp.getDate()
+            var month = temp.getMonth()+1
+            month = String(month).length==1?`0${month}`:String(month)
+            var yr = String(temp.getFullYear()).slice(2)  
+            day1 = String(day1).length==1?`0${String(day1)}`:String(day1)
+            temp = `${yr}${month}${day1}`
+            days.push(temp)
+        }
+        console.log("days--",days)
+        return [days,weekNum]
+    }
     const showDatePicker = () => {
         // setDatePickerVisibility(true);
-        console.log("datepicker shown")
+        // console.log("datepicker shown")
         props.navigation.setParams({"isDatePickerVisible": true})
     };
     
     const hideDatePicker = () => {
         // setDatePickerVisibility(false);
-        console.log("datepicker hidden")
+        // console.log("datepicker hidden")
         props.navigation.setParams({"isDatePickerVisible": false})
     };
 
     const handleConfirm = (date) => {
-
-        let currDate = moment(date).utcOffset('+5:30')
-        let pickDateString = currDate.format('MMMM DD, Y')
+        // console.log("on line 75------",date) // 2022-12-23T07:32:57.085Z
+        // let currDate2 = moment(date).utcOffset('+5:30')
+        let currDate = moment(date)
+        let pickDateString = currDate.format('MMM DD, Y')
         let pickedDateKey = currDate.format('YYMMDD')
-        console.log("on line 75",date)
+        var dateTimeKeys = getexpenditureKeys(currDate,pickedDateKey)
         hideDatePicker();
         setPickedDate({
             dateString: pickDateString,
-            dateAsKey: pickedDateKey
+            dateAsKey: pickedDateKey,
+            dateTimeKeys
         })
 
+        
         // dispatch({type: 'get', dateAsKey: pickedDateKey}) // abid
-        getData(pickedDateKey, dispatch)
-        console.log("A date has been picked: ", initialDateString, initialDateKey);
+        // getSelectedWeekDays(date)
+        // getData(pickedDateKey, dispatch) // using asyncstorage  
+
+
+        // getFirestoreDoc("dailyRecords",pickedDateKey,dispatch,"itemsArray") // using Firebase/firestore
+        const dailyRecordsRef = db.collection(userId).doc('dailyRecords').collection(pickedDateKey).doc('entries') 
+        getFirestoreData(dailyRecordsRef,dispatch,'itemsArray')
+        getExpenditureSummary(expenditureSummaryDispatch, dateTimeKeys)
+        // console.log("A date has been picked: ", initialDateString, initialDateKey);
     };
 
     // Loads everytime parameters defined inside [] changes
@@ -105,55 +183,80 @@ const HomeScreen = (props) => {
             console.log("Date not changed", isDatePickerVisible, props.route.params.isDatePickerVisible)
         }
 
-        getData("transactionCategories", dispatch2,processCategoriesData)
+        // getData("transactionCategories", dispatch2,processCategoriesData)
+        
         // console.log("transaction item----->>", transactionItems);
 
-    },[props.route.params]);
+    },[props.route.params.isDatePickerVisible, props.route.params.modalVisible]);
 
     // executes one-time on startup and never again
     useEffect(() => {
         console.log("-------------+++++useEffect 2 Triggered +++++----------------")
-        let currDate = moment(Date.now()).utcOffset('+5:30')
-        let initialDateString = currDate.format('MMMM DD, Y')
+        let currDate = moment(Date.now())
+        console.log("curr Dateeeeee --------", currDate)
+        let initialDateString = currDate.format('MMM DD, Y')
         let initialDateKey = currDate.format('YYMMDD')
         console.log("A date has been set on start: ", initialDateString, initialDateKey);
+        var dateTimeKeys = getexpenditureKeys(currDate,initialDateKey)
         setPickedDate({
             dateString: initialDateString,
-            dateAsKey: initialDateKey
+            dateAsKey: initialDateKey,
+            dateTimeKeys
         })
         console.log("going to getData")
+        getExpenditureSummary(expenditureSummaryDispatch, dateTimeKeys)
+        // getData(initialDateKey, dispatch) // abid - using async storage
 
-        getData(initialDateKey, dispatch) // abid
-        // dispatch({type: 'get', dateAsKey: initialDateKey})
+
+        // getFirestoreDoc("dailyRecords",initialDateKey,dispatch,"itemsArray") // using Firebase/Firestore
+        const dailyRecordsRef = db.collection(userId).doc('dailyRecords').collection(initialDateKey).doc('entries') 
+        getFirestoreData(dailyRecordsRef,dispatch,'itemsArray')
     },[]);
+    // const state1 = useNavigationState(state => state.routes);
+    // console.log("useNavigationState-----",state1[1])
+    const isfocused = useIsFocused();
+    useEffect(() => {
+        if (isfocused) {
+            log.debug("Fetching transactionCategories-------------------------",isfocused)
+            console.log("Fetching.................", isfocused)
+            // getFirestoreCollection("transactionCategories",dispatch2,processCategoriesData)
+            getFirestoreData(categoriesRef,dispatch2,"itemsArray")
+        }
+        else {
+            log.debug("Notttt Fetching transactionCategories-------------------------",isfocused)
+            console.log("Notttt Fetching transactionCategories-------------------------",isfocused)
+        }
+    },[isfocused])
+    // },[state1[1]])
 
     return(
-        <View style={styles.container}>
-            {/* <Text>Hello Abid</Text>
-            <Button onPress={() => console.log("++++++++++++++",props,"+++++++++++++++++")} title="Show props logs"/> */}
-            {/* <Button onPress={getData(pickedDate.dateAsKey)} title="Async Data"/> */}
-            <View style={styles.topSummaryBar}>
-                <View style={styles.topSummaryBarLeft}>
-                    <Text> {pickedDate.dateString} </Text>
-                </View>
-                <View style={styles.topSummaryBarRight}>
-                    <Text style={styles.topBarSummaryAmount}>₹ 300</Text>
-                    <Text style={styles.topBarSummaryAmount}>₹ 1,300</Text>
-                </View>
-            </View>
+        <View style={[styles.container,{backgroundColor: theme.colors.surface}]}>
+            
+            <HomeSummaryBar pickedDate={pickedDate.dateString} expenditureSummary={expenditureSummary} theme={theme}/>
             <View style={styles.centeredView}>
-                <ItemAddView isModalVisible={isModalVisible} dateAsKey={pickedDate.dateAsKey} categoryList={categoryList} itemAddCallback={dispatch} {...props}/>
+                <ItemAddView 
+                isModalVisible={isModalVisible} 
+                transactionItems={transactionItems} 
+                dateAsKey={pickedDate.dateAsKey} 
+                categoryList={categoryList} 
+                dateTimeKeys={pickedDate.dateTimeKeys} 
+                itemAddCallback={dispatch} 
+                expenditureSummary={expenditureSummary}
+                expenditureSummaryDispatch={expenditureSummaryDispatch} 
+                theme={theme}
+                {...props}/>
             </View>
             <DateTimePickerModal
                 isVisible={isDatePickerVisible}
                 mode="date"
+                isDarkModeEnabled={true}
                 onConfirm={handleConfirm}
                 onCancel={hideDatePicker}
             />
             <FlatList 
                 data={transactionItems}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-                renderItem={({item}) => <TransactionItemCard dateAsKey={pickedDate.dateAsKey} dispatchCallback={dispatch} {...item}/>}
+                // ItemSeparatorComponent={() => <View style={styles.separator} />}
+                renderItem={({item}) => <TransactionItemCard dateAsKey={pickedDate.dateAsKey} transactionItemDeleteCallback={transactionItemDeleteCallback} collectionName="dailyRecords" navigation={props.navigation} dateTimeKeys={pickedDate.dateTimeKeys} docName={pickedDate.dateAsKey} dispatchCallback={dispatch} {...item} theme={theme}/>}
             />
 
         </View>

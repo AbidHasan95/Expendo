@@ -57,36 +57,6 @@ const setData = async (updatedItems, dateAsKey) => {
     }
 }
 
-const setDataFirestore = async (collectionName, docName,itemObj) => {
-    try {
-        console.log("Adding to firestore", collectionName, docName,itemObj)
-        const docRef = db.collection(collectionName).doc(`${docName}`);
-        // itemObj = JSON.stringify()
-        await docRef.set(itemObj);
-    }
-    catch (error) {
-        console.error("Error on setData firestore",error)
-    }
-}
-
-const addSubCollectionDataFirestore = async (docName, subCollectionName, subDocName, itemObj) => {
-    // try {
-        const collectionName= auth.currentUser.uid
-        console.log("in addSubColletionDataFirestore; collectionName:", collectionName, "docName",docName, "subCollectionName",subCollectionName, "subDocName->",subDocName,"itemObj-->", itemObj)
-        if (subDocName==undefined) {
-            const docRef = db.collection(collectionName).doc(`${docName}`).collection(subCollectionName);
-            docRef.add(itemObj)
-        }
-        else {
-            const docRef = db.collection(collectionName).doc(`${docName}`).collection(subCollectionName).doc(subDocName);
-            await docRef.set(itemObj);
-        }
-    // }
-    // catch (error) {
-    //    console.error("Error on add addSubCollectionDataFirestore") 
-    // }
-}
-
 const addDataToRef = async (pathRef, itemObj) => {
     try {
         await pathRef.set(itemObj)
@@ -150,44 +120,6 @@ const getFirestoreData = async(pathRef,dispatch,propToFetch) => {
     dispatch({type: 'get', fetchedData: fetchedData})
 }
 
-const getFirestoreSubDocItem = async (docName,subCollectionName,subDocName,dispatch,propToFetch) => {
-    console.log("go to be fetched2 ->",collectionName, docName,propToFetch)
-    const currUser = auth.currentUser
-    const collectionName = 'user-'+currUser.uid
-    var fetchedData= null;
-
-    const docRef = await db.collection(collectionName)
-        .doc(docName)
-        .collection(subCollectionName)
-        .doc(subDocName)
-        .get()
-        .then(snap => {
-            console.log(snap.data())
-            fetchedData = snap.data()
-        });
-    if (!fetchedData) {
-        console.log('No such document!');
-        fetchedData = []
-      } else {
-        console.log('Document data:',fetchedData);
-        
-    }
-
-    console.log("fetched ->",collectionName, docName,fetchedData)
-    dispatch({type: 'get', fetchedData: fetchedData})
-
-}
-
-
-const deleteDocumentsFirestore = async (collectionName,docNames) => {
-    console.log("in deleteFirestore",docNames)
-    for (let i=0;i<docNames.length;i++) {
-        let docName = `${docNames[i]}`
-        console.log("collectionName",collectionName,"docName", docName)
-        await db.collection(collectionName).doc(docName).delete();
-    }
-}
-
 const getExpenditureItem = async (collectionName, docName) => {
     const userId = auth.currentUser.uid
     const docRef = await db.collection(userId).doc(collectionName).collection(docName).doc("entry").get();
@@ -211,28 +143,6 @@ const getExpenditureSummary = async (dispatch, dateTimeKeys) => {
     dispatch({type: 'get', fetchedData: res})
 }
 
-const updateExpenditureItem_old2 = async (collectionName, docName,expenditureSummary,transType,amount) => {
-    console.log("came in updateExpenditureItem--->",docName,amount, typeof(amount))
-    const docRef = await db.collection(collectionName).doc(docName);
-    const docRefGet = await db.collection(collectionName).doc(docName).get();
-    var data;
-    if (!docRefGet.exists) {
-        var otherKey = transType==="credit"?"debit":"credit"
-        data = {}
-        data[otherKey] = 0
-        data[transType] = amount
-        console.log("data not present===<<<", data)
-    }
-    else {
-        data = docRefGet.data()
-        console.log("data present===<<<", data)
-        data[transType] += amount
-        console.log("new data===<<<", data)
-    }
-    // console.warn("setting data---->", data)
-    await docRef.set(data)
-    return data
-}
 
 const updateExpenditureItem = async (collectionName, docName,expenditureSummary,transType,amount) => {
     console.log("came in updateExpenditureItem--->",docName,expenditureSummary,amount, typeof(amount))
@@ -245,20 +155,6 @@ const updateExpenditureItem = async (collectionName, docName,expenditureSummary,
     console.log("new data===<<<", data)
     await docRef.set(data)
     // return data
-}
-
-const updateExpenditureSummary_old = async (deltaItem, expenditureSummary,dateTimeKeys, dispatch,operation) => {
-    const multiplier = operation==="remove"?-1:1;
-    var transType = deltaItem.isCredit?"credit":"debit";
-    console.log("updateExpenditureSummary",deltaItem, operation, expenditureSummary,"amount--",deltaItem.amount,typeof(deltaItem.amount))
-    var amount = deltaItem.amount * multiplier
-
-    var res = {}
-    res.dailyExpenditure = await updateExpenditureItem("dailyExpenditure",dateTimeKeys.dateKey,expenditureSummary,transType,amount)
-    res.weeklyExpenditure = await updateExpenditureItem("weeklyExpenditure",dateTimeKeys.weeklyKey,expenditureSummary,transType,amount)
-    res.monthlyExpenditure = await updateExpenditureItem("monthlyExpenditure",dateTimeKeys.monthlyKey,expenditureSummary,transType,amount)
-    res.yearlyExpenditure = await updateExpenditureItem("yearlyExpenditure",dateTimeKeys.yearlyKey,expenditureSummary,transType,amount)
-    dispatch({type: 'get', fetchedData: res})
 }
 
 const updateExpenditureSummary = async (deltaItem, expenditureSummary,dateTimeKeys, dispatch,operation) => {

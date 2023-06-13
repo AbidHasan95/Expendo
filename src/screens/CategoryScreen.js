@@ -3,7 +3,7 @@ import {useState, useEffect, useReducer, useRef} from 'react';
 import { View, FlatList, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
 import { Chip, Text, Modal, Portal, Provider, TextInput, Button, useTheme } from 'react-native-paper';
 import { useForm, Controller } from "react-hook-form"; //  https://react-hook-form.com/
-import {itemsReducer, getData, getFirestoreDoc,getFirestoreCollection,getFirestoreData, log} from '../utils/tasksUtil';
+import {itemsReducer, getFirestoreData, log} from '../utils/tasksUtil';
 import { Appbar } from 'react-native-paper';
 import { auth, db } from '../../config/firebase';
 // https://www.stefanjudis.com/snippets/how-to-detect-emojis-in-javascript-strings/
